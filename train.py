@@ -37,9 +37,9 @@ def data_initialization(n_way, n_episodes, n_support, n_queries):
     train_dataset = CardDataset(image_folder_dataset=folder_dataset, n_support=n_support, n_queries=n_queries,
                                 transform=data_transforms)
 
-    sampler = EpisodicBatchSampler(len(train_dataset), n_way, n_episodes)
+    batch_sampler = EpisodicBatchSampler(len(train_dataset), n_way, n_episodes)
 
-    return DataLoader(train_dataset, sampler=sampler, num_workers=0)
+    return DataLoader(train_dataset, batch_sampler=batch_sampler, num_workers=0)
 
 
 def train(model, optimizer, train_dataloader, n_way, n_support, n_queries):
