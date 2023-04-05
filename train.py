@@ -28,6 +28,8 @@ class Config:
     hidden_dim = 64
     output_dim = 64
 
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
 
 def data_initialization(n_way, n_episodes, n_support, n_queries):
     folder_dataset = datasets.ImageFolder(root=Config.training_dir)
@@ -40,7 +42,7 @@ def data_initialization(n_way, n_episodes, n_support, n_queries):
 
 
 def train(model, optimizer, train_dataloader, n_way, n_support, n_queries):
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    results_history = []
 
     print("Start training")
     for epoch in range(Config.train_number_epochs):
@@ -52,11 +54,11 @@ def train(model, optimizer, train_dataloader, n_way, n_support, n_queries):
             assert batch['supports'].size(0) == batch['queries'].size(0)
 
             label = batch['label']
-            supports = batch['supports']
-            queries = batch['queries']
+            supports = batch['supports'].to(Config.device)
+            queries = batch['queries'].to(Config.device)
 
             label = label.view(n_way, 1, 1).expand(n_way, n_queries, 1).long()
-            label = tensor(label, requires_grad=False)
+            label = tensor(label, requires_grad=False).to(Config.device)
 
             inputs = cat([
                 supports.view(n_way * n_support, *supports.size()[2:]),
@@ -70,18 +72,20 @@ def train(model, optimizer, train_dataloader, n_way, n_support, n_queries):
             loss.backward()
             optimizer.step()
 
-            save_path = './models/checkpoints/res_epoch_{}_012023.pth'.format(epoch)
-            save({
-                'epoch': epoch,
-                'model_state_dict': model.state_dict(),
-                'optimizer_state_dict': optimizer.state_dict(),
-                'results': results
-            }, save_path)
+            results_history.append(results)
 
-            epoch += 1
+        save_path = './models/checkpoints/res_epoch_{}_012023.pth'.format(epoch)
+        save({
+            'epoch': epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'results': results_history
+        }, save_path)
 
-        save_path = './res-300-normalized.pth'
-        save(model.state_dict(), save_path)
+        epoch += 1
+
+    save_path = './res-300-normalized.pth'
+    save(model.state_dict(), save_path)
 
 
 if __name__ == '__main__':
@@ -96,7 +100,7 @@ if __name__ == '__main__':
         input_dim=Config.input_dim,
         hidden_dim=Config.hidden_dim,
         output_dim=Config.output_dim
-    )
+    ).to(Config.device)
     optimizer = optim.Adam(model.parameters(), lr=Config.lr)
 
     train(
