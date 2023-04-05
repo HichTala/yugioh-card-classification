@@ -24,7 +24,7 @@ class Config:
     n_support = 5  # Number of support examples per classes
     n_queries = 5  # Number of query examples per classes
 
-    input_dim = 1
+    input_dim = 3
     hidden_dim = 64
     output_dim = 64
 
