@@ -4,7 +4,6 @@ import pickle
 from PIL import Image
 from torch import load
 
-from siamese_network import SiameseNetwork
 from transformations import data_transforms
 
 if __name__ == '__main__':

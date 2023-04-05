@@ -7,7 +7,6 @@ from PIL import Image
 from torch import load
 from torch.nn.functional import pairwise_distance
 
-from siamese_network import SiameseNetwork
 from tools import art_cropper, calculate_HOG_points, calculate_SIFT_score
 from transformations import data_transforms, image_transforms, data_transforms_no_tensor, image_transforms_no_tensor
 
