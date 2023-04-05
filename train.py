@@ -1,3 +1,4 @@
+import numpy as np
 import torch.cuda
 from torch import optim, save, load, cat, tensor
 from torch.utils.data import DataLoader
@@ -42,7 +43,7 @@ def data_initialization(n_way, n_episodes, n_support, n_queries):
 
 
 def train(model, optimizer, train_dataloader, n_way, n_support, n_queries):
-    results_history = []
+    results_history = {'loss': [], 'acc': []}
 
     print("Start training")
     for epoch in range(Config.train_number_epochs):
@@ -72,9 +73,12 @@ def train(model, optimizer, train_dataloader, n_way, n_support, n_queries):
             loss.backward()
             optimizer.step()
 
-            results_history.append(results)
+            results_history['loss'].append(results['loss'])
+            results_history['acc'].append(results['acc'])
 
-        save_path = './models/checkpoints/res_epoch_{}_012023.pth'.format(epoch)
+        print("loss: {}, acc: {}".format(np.mean(results_history['loss']), np.mean(results_history['acc'].mean())))
+
+        save_path = './models/checkpoints/proto_epoch_{}_050423.pth'.format(epoch)
         save({
             'epoch': epoch,
             'model_state_dict': model.state_dict(),
@@ -84,7 +88,7 @@ def train(model, optimizer, train_dataloader, n_way, n_support, n_queries):
 
         epoch += 1
 
-    save_path = './res-300-normalized.pth'
+    save_path = './models/proto_050423.pth'
     save(model.state_dict(), save_path)
 
 
