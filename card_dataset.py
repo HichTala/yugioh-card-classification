@@ -21,10 +21,13 @@ class CardDataset(Dataset):
         label = img_tuple[1]
 
         if self.transform is not None:
-            support = [self.transform(img) for _ in range(self.n_support)]
-            query = [self.transform(img) for _ in range(self.n_query)]
+            supports = [self.transform(img) for _ in range(self.n_support)]
+            queries = [self.transform(img) for _ in range(self.n_query)]
+        else:
+            supports = img
+            queries = img
 
-        return img, label
+        return {'label': label, 'supports': supports, 'queries': queries}
 
     def __len__(self):
         return len(self.image_folder_dataset.imgs)
