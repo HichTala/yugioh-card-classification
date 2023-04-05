@@ -19,10 +19,14 @@ class Config:
 
     lr = 0.0005
 
-    n_way = 1000
-    n_episodes = 22
-    n_support = 5
-    n_queries = 5
+    n_way = 1000  # Number of classes per episode
+    n_episodes = 22  # Number of episodes
+    n_support = 5  # Number of support examples per classes
+    n_queries = 5  # Number of query examples per classes
+
+    input_dim = 1
+    hidden_dim = 64
+    output_dim = 64
 
 
 def data_initialization(n_way, n_episodes, n_support, n_queries):
@@ -66,18 +70,18 @@ def train(model, optimizer, train_dataloader, n_way, n_support, n_queries):
             loss.backward()
             optimizer.step()
 
-            savePath = './models/checkpoints/res_epoch_{}_012023.pth'.format(epoch)
+            save_path = './models/checkpoints/res_epoch_{}_012023.pth'.format(epoch)
             save({
                 'epoch': epoch,
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
                 'results': results
-            }, savePath)
+            }, save_path)
 
             epoch += 1
 
-        savePath = './res-300-normalized.pth'
-        save(model.state_dict(), savePath)
+        save_path = './res-300-normalized.pth'
+        save(model.state_dict(), save_path)
 
 
 if __name__ == '__main__':
@@ -88,7 +92,11 @@ if __name__ == '__main__':
         n_way=Config.n_way
     )
 
-    model = ProtoNet()
+    model = ProtoNet(
+        input_dim=Config.input_dim,
+        hidden_dim=Config.hidden_dim,
+        output_dim=Config.output_dim
+    )
     optimizer = optim.Adam(model.parameters(), lr=Config.lr)
 
     train(
