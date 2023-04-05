@@ -2,15 +2,12 @@ import torch.cuda
 from torch import optim, save, load, cat, tensor
 from torch.utils.data import DataLoader
 from torchvision import datasets
-from torchvision.models import ResNet101_Weights
 from tqdm import tqdm
 
 from card_dataset import CardDataset
 from protonet import ProtoNet
 from prototypical_loss import prototypical_loss as loss_fn
 from sampler import EpisodicBatchSampler
-from siamese_network import SiameseNetwork
-from loss_functions import ContrastiveLoss
 from transformations import data_transforms
 
 
