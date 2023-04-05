@@ -8,10 +8,10 @@ from torch.utils.data import Dataset
 
 class CardDataset(Dataset):
 
-    def __init__(self, image_folder_dataset, n_support, n_query, transform=None):
+    def __init__(self, image_folder_dataset, n_support, n_queries, transform=None):
         self.image_folder_dataset = image_folder_dataset
         self.n_support = n_support
-        self.n_query = n_query
+        self.n_queries = n_queries
         self.transform = transform
 
     def __getitem__(self, index):
@@ -22,7 +22,7 @@ class CardDataset(Dataset):
 
         if self.transform is not None:
             supports = [self.transform(img) for _ in range(self.n_support)]
-            queries = [self.transform(img) for _ in range(self.n_query)]
+            queries = [self.transform(img) for _ in range(self.n_queries)]
         else:
             supports = img
             queries = img
