@@ -20,7 +20,7 @@ class Config:
 
     lr = 0.0005
 
-    n_way = 128  # Number of classes per episode
+    n_way = 64  # Number of classes per episode
     n_episodes = 22  # Number of episodes
     n_support = 5  # Number of support examples per classes
     n_queries = 5  # Number of query examples per classes
@@ -54,11 +54,10 @@ def train(model, optimizer, train_dataloader, n_way, n_support, n_queries):
 
             assert batch['supports'].size(0) == batch['queries'].size(0)
 
-            label = batch['label']
             supports = batch['supports'].to(Config.device)
             queries = batch['queries'].to(Config.device)
 
-            label = label.view(n_way, 1, 1).expand(n_way, n_queries, 1).short().to(Config.device)
+            label = torch.arange(0, n_way).view(n_way, 1, 1).expand(n_way, n_queries, 1).long().to(Config.device)
 
             inputs = cat([
                 supports.view(n_way * n_support, *supports.size()[2:]),
@@ -75,7 +74,7 @@ def train(model, optimizer, train_dataloader, n_way, n_support, n_queries):
             results_history['loss'].append(results['loss'])
             results_history['acc'].append(results['acc'])
 
-        print("loss: {}, acc: {}".format(np.mean(results_history['loss']), np.mean(results_history['acc'].mean())))
+        print("loss: {}, acc: {}".format(np.mean(results_history['loss']), np.mean(results_history['acc'])))
 
         save_path = './models/checkpoints/proto_epoch_{}_050423.pth'.format(epoch)
         save({
