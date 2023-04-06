@@ -105,7 +105,7 @@ def train(model, optimizer, results_history, train_dataloader, epochs, n_way, n_
 
         epoch += 1
 
-    save_path = './models/proto_050423.pth'
+    save_path = './models/proto.pth'
     save(model.state_dict(), save_path)
 
 
