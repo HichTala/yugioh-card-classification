@@ -1,8 +1,8 @@
 import argparse
 
 import numpy as np
-import torch.cuda
-from torch import optim, save, load, cat
+from torch import optim, save, load, cat, arange
+from torch.cuda import is_available
 from torch.utils.data import DataLoader
 from torchvision import datasets
 from tqdm import tqdm
@@ -11,7 +11,7 @@ from card_dataset import CardDataset
 from protonet import ProtoNet
 from prototypical_loss import prototypical_loss as loss_fn
 from sampler import EpisodicBatchSampler
-from transformations import data_transforms
+from transformations import train_data_transforms
 
 
 def parse_command_line():
@@ -31,11 +31,11 @@ def parse_command_line():
 
     # model args
     parser.add_argument('--input_dim', type=int, default=3,
-                        help='input image number of channel (default: 3)')
+                        help="input image number of channel (default: 3)")
     parser.add_argument('--hidden_dim', type=int, default=64,
-                        help='hidden layer dimensions (default: 64)')
+                        help="hidden layer dimensions (default: 64)")
     parser.add_argument('--output_dim', type=int, default=64,
-                        help='model output dimensions')
+                        help="model output dimensions")
 
     # hyperparameter args
     parser.add_argument('--n_way', type=int, default=64,
@@ -57,7 +57,7 @@ def parse_command_line():
 def data_initialization(training_dir, n_way, n_episodes, n_supports, n_queries):
     folder_dataset = datasets.ImageFolder(root=training_dir)
     train_dataset = CardDataset(image_folder_dataset=folder_dataset, n_supports=n_supports, n_queries=n_queries,
-                                transform=data_transforms)
+                                transform=train_data_transforms)
 
     batch_sampler = EpisodicBatchSampler(len(train_dataset), n_way, n_episodes)
 
@@ -77,7 +77,7 @@ def train(model, optimizer, results_history, train_dataloader, epochs, n_way, n_
             supports = batch['supports'].to(device)
             queries = batch['queries'].to(device)
 
-            label = torch.arange(0, n_way).view(n_way, 1, 1).expand(n_way, n_queries, 1).long().to(device)
+            label = arange(0, n_way).view(n_way, 1, 1).expand(n_way, n_queries, 1).long().to(device)
 
             inputs = cat([
                 supports.view(n_way * n_supports, *supports.size()[2:]),
@@ -96,7 +96,7 @@ def train(model, optimizer, results_history, train_dataloader, epochs, n_way, n_
 
         print("loss: {}, acc: {}".format(np.mean(results_history['loss']), np.mean(results_history['acc'])))
 
-        save_path = './models/checkpoints/proto_epoch_{}_050423.pth'.format(epoch)
+        save_path = './models/checkpoints/proto_epoch_{}.pth'.format(epoch)
         save({
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
@@ -110,8 +110,8 @@ def train(model, optimizer, results_history, train_dataloader, epochs, n_way, n_
 
 
 def main(args):
-    if args.device == '':
-        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    if args.device is None:
+        device = 'cuda' if is_available() else 'cpu'
     else:
         device = args.device
 
