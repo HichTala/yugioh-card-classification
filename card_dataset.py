@@ -7,9 +7,9 @@ from PIL import Image
 
 class CardDataset(Dataset):
 
-    def __init__(self, image_folder_dataset, n_support, n_queries, transform=None):
+    def __init__(self, image_folder_dataset, n_supports, n_queries, transform=None):
         self.image_folder_dataset = image_folder_dataset
-        self.n_support = n_support
+        self.n_supports = n_supports
         self.n_queries = n_queries
         self.transform = transform
 
@@ -21,7 +21,7 @@ class CardDataset(Dataset):
 
         img = T.ToTensor()(img).unsqueeze(0)
 
-        supports = [img] * self.n_support
+        supports = [img] * self.n_supports
         queries = [img] * self.n_queries
 
         supports = torch.cat(supports, dim=0)
