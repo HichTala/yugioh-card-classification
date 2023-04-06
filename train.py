@@ -64,7 +64,7 @@ def data_initialization(training_dir, n_way, n_episodes, n_supports, n_queries):
     return DataLoader(train_dataset, batch_sampler=batch_sampler, num_workers=0)
 
 
-def train(model, optimizer, train_dataloader, epochs, n_way, n_support, n_queries, device):
+def train(model, optimizer, train_dataloader, epochs, n_way, n_supports, n_queries, device):
     results_history = {'loss': [], 'acc': []}
 
     print("Start training")
@@ -82,13 +82,13 @@ def train(model, optimizer, train_dataloader, epochs, n_way, n_support, n_querie
             label = torch.arange(0, n_way).view(n_way, 1, 1).expand(n_way, n_queries, 1).long().to(device)
 
             inputs = cat([
-                supports.view(n_way * n_support, *supports.size()[2:]),
+                supports.view(n_way * n_supports, *supports.size()[2:]),
                 supports.view(n_way * n_queries, *queries.size()[2:])
             ], dim=0)
 
             outputs = model(inputs)
 
-            loss, results = loss_fn(outputs, label, n_way, n_support, n_queries)
+            loss, results = loss_fn(outputs, label, n_way, n_supports, n_queries)
 
             loss.backward()
             optimizer.step()
@@ -119,7 +119,7 @@ def main(args):
         device = args.device
 
     train_dataloader = data_initialization(
-        training_dir=args.dat_path,
+        training_dir=args.data_path,
         n_supports=args.n_supports,
         n_queries=args.n_queries,
         n_episodes=args.n_episodes,
@@ -139,7 +139,7 @@ def main(args):
         train_dataloader=train_dataloader,
         epochs=args.epochs,
         n_way=args.n_way,
-        n_support=args.n_support,
+        n_supports=args.n_supports,
         n_queries=args.n_queries,
         device=device
     )
