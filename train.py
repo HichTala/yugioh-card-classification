@@ -40,11 +40,11 @@ def parse_command_line():
     # hyperparameter args
     parser.add_argument('--n_way', type=int, default=64,
                         help="Number of classes per episode")
-    parser.add_argument('n_episodes', type=int, default=390,
+    parser.add_argument('--n_episodes', type=int, default=390,
                         help="Number of episodes")
-    parser.add_argument('n_supports', type=int, default=5,
+    parser.add_argument('--n_supports', type=int, default=5,
                         help="Number of support examples per classes")
-    parser.add_argument('n_queries', type=int, default=5,
+    parser.add_argument('--n_queries', type=int, default=5,
                         help="Number of query examples per classes")
 
     # resume training
