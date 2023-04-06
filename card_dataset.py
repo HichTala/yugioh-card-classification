@@ -31,10 +31,9 @@ class CardDataset(Dataset):
         queries = torch.cat(queries, dim=0)
 
         if self.transform is not None:
-            start = time.time()
             supports = self.transform(supports)
             queries = self.transform(queries)
-            print(time.time()-start)
+
 
         return {'label': label, 'supports': supports, 'queries': queries}
 
