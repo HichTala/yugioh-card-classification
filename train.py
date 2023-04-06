@@ -24,7 +24,7 @@ def parse_command_line():
     # train args
     parser.add_argument('--epochs', default=300, type=int,
                         help="Number of epochs to train (default: 300)")
-    parser.add_argument('--lr', default=0.001, type=float,
+    parser.add_argument('--lr', default=0.01, type=float,
                         help="learning rate (default: 0.001)")
     parser.add_argument('--device', type=str, default=None,
                         help="device to use for training (default: cuda if available cpu otherwise)")
@@ -69,7 +69,7 @@ def train(model, optimizer, results_history, train_dataloader, epochs, n_way, n_
     for epoch in range(epochs):
         model.train()
 
-        for batch in tqdm(train_dataloader, desc="Epoch {:d} train".format(epoch), colour='cyan'):
+        for batch in tqdm(train_dataloader, desc="\033[1mEpoch {:d}\033[0m train".format(epoch), colour='cyan'):
             optimizer.zero_grad()
 
             assert batch['supports'].size(0) == batch['queries'].size(0)
@@ -94,7 +94,7 @@ def train(model, optimizer, results_history, train_dataloader, epochs, n_way, n_
             results_history['loss'].append(results['loss'])
             results_history['acc'].append(results['acc'])
 
-        print("loss: {}, acc: {}".format(np.mean(results_history['loss']), np.mean(results_history['acc'])))
+        print("\033[1m\033[96mloss\033[0m: {}, \033[1m\033[96macc\033[0m: {}".format(np.mean(results_history['loss']), np.mean(results_history['acc'])))
 
         save_path = './models/checkpoints/proto_epoch_{}.pth'.format(epoch)
         save({
