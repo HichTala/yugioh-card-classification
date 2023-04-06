@@ -4,6 +4,8 @@ import torch
 from PIL import Image
 import random
 from torch.utils.data import Dataset
+import torchvision.transforms as T
+import time
 
 
 class CardDataset(Dataset):
@@ -20,12 +22,19 @@ class CardDataset(Dataset):
         img = Image.open(img_tuple[0])
         label = img_tuple[1]
 
+        img = T.ToTensor()(img).unsqueeze(0)
+
+        supports = [img]*self.n_support
+        queries = [img]*self.n_queries
+
+        supports = torch.cat(supports, dim=0)
+        queries = torch.cat(queries, dim=0)
+
         if self.transform is not None:
-            supports = [self.transform(img) for _ in range(self.n_support)]
-            queries = [self.transform(img) for _ in range(self.n_queries)]
-        else:
-            supports = img
-            queries = img
+            start = time.time()
+            supports = self.transform(supports)
+            queries = self.transform(queries)
+            print(time.time()-start)
 
         return {'label': label, 'supports': supports, 'queries': queries}
 
