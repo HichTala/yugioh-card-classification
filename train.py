@@ -21,7 +21,7 @@ class Config:
     lr = 0.0005
 
     n_way = 64  # Number of classes per episode
-    n_episodes = 22  # Number of episodes
+    n_episodes = 390  # Number of episodes
     n_support = 5  # Number of support examples per classes
     n_queries = 5  # Number of query examples per classes
 
@@ -49,7 +49,7 @@ def train(model, optimizer, train_dataloader, n_way, n_support, n_queries):
     for epoch in range(Config.train_number_epochs):
         model.train()
 
-        for batch in tqdm(train_dataloader, desc="Epoch {:d} train".format(epoch)):
+        for batch in tqdm(train_dataloader, desc="Epoch {:d} train".format(epoch), colour='cyan'):
             optimizer.zero_grad()
 
             assert batch['supports'].size(0) == batch['queries'].size(0)
