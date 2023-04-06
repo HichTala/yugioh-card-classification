@@ -1,4 +1,4 @@
-from random import uniform, normalvariate
+from random import normalvariate
 
 from torchvision import transforms as T
 

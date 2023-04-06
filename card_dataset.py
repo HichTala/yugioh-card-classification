@@ -1,11 +1,8 @@
-import cv2
-import numpy as np
 import torch
-from PIL import Image
-import random
 from torch.utils.data import Dataset
 import torchvision.transforms as T
-import time
+
+from PIL import Image
 
 
 class CardDataset(Dataset):
