@@ -22,7 +22,7 @@ def parse_command_line():
                         help="Path to training dataset's directory")
 
     # train args
-    parser.add_argument('--epochs', default='300', type=str,
+    parser.add_argument('--epochs', default=300, type=int,
                         help="Number of epochs to train (default: 300)")
     parser.add_argument('--lr', default=5e-4, type=float,
                         help="learning rate (default: 0.001)")
