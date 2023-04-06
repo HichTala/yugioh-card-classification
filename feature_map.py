@@ -1,3 +1,4 @@
+import argparse
 import os
 import pickle
 
@@ -5,6 +6,9 @@ from PIL import Image
 from torch import load
 
 from transformations import data_transforms
+
+def parse_command_line():
+    parser = argparse.ArgumentParser('Yu-Gi-Oh! Card classification feature map parser', add_help=True)
 
 if __name__ == '__main__':
 

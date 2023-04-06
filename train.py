@@ -64,9 +64,7 @@ def data_initialization(training_dir, n_way, n_episodes, n_supports, n_queries):
     return DataLoader(train_dataset, batch_sampler=batch_sampler, num_workers=0)
 
 
-def train(model, optimizer, train_dataloader, epochs, n_way, n_supports, n_queries, device):
-    results_history = {'loss': [], 'acc': []}
-
+def train(model, optimizer, results_history, train_dataloader, epochs, n_way, n_supports, n_queries, device):
     print("Start training")
     for epoch in range(epochs):
         model.train()
@@ -100,7 +98,6 @@ def train(model, optimizer, train_dataloader, epochs, n_way, n_supports, n_queri
 
         save_path = './models/checkpoints/proto_epoch_{}_050423.pth'.format(epoch)
         save({
-            'epoch': epoch,
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
             'results': results_history
@@ -131,11 +128,20 @@ def main(args):
         hidden_dim=args.hidden_dim,
         output_dim=args.output_dim
     ).to(device)
+
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
+    results_history = {'loss': [], 'acc': []}
+
+    if args.resume is not None:
+        state_dict = load(args.resume)
+        model.load_state_dict(state_dict['model_state_dict'])
+        optimizer.load_state_dict(state_dict['optimizer_state_dict'])
+        results_history = state_dict['results']
 
     train(
         model=model,
         optimizer=optimizer,
+        results_history=results_history,
         train_dataloader=train_dataloader,
         epochs=args.epochs,
         n_way=args.n_way,
