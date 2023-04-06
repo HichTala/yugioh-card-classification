@@ -1,6 +1,8 @@
+import argparse
+
 import numpy as np
 import torch.cuda
-from torch import optim, save, load, cat, tensor
+from torch import optim, save, load, cat
 from torch.utils.data import DataLoader
 from torchvision import datasets
 from tqdm import tqdm
@@ -12,29 +14,49 @@ from sampler import EpisodicBatchSampler
 from transformations import data_transforms
 
 
-class Config:
-    training_dir = "./cardDatabaseFull/"
+def parse_command_line():
+    parser = argparse.ArgumentParser('Yu-Gi-Oh! Card classification training parser', add_help=True)
 
-    train_number_epochs = 300
-    resume_training = True
+    # data args
+    parser.add_argument('--data_path', default='./cardDatabaseFull/', type=str,
+                        help="Path to training dataset's directory")
 
-    lr = 0.0005
+    # train args
+    parser.add_argument('--epochs', default='300', type=str,
+                        help="Number of epochs to train (default: 300)")
+    parser.add_argument('--lr', default=5e-4, type=float,
+                        help="learning rate (default: 0.001)")
+    parser.add_argument('--device', type=str, default=None,
+                        help="device to use for training (default: cuda if available cpu otherwise)")
 
-    n_way = 64  # Number of classes per episode
-    n_episodes = 390  # Number of episodes
-    n_support = 5  # Number of support examples per classes
-    n_queries = 5  # Number of query examples per classes
+    # model args
+    parser.add_argument('--input_dim', type=int, default=3,
+                        help='input image number of channel (default: 3)')
+    parser.add_argument('--hidden_dim', type=int, default=64,
+                        help='hidden layer dimensions (default: 64)')
+    parser.add_argument('--output_dim', type=int, default=64,
+                        help='model output dimensions')
 
-    input_dim = 3
-    hidden_dim = 64
-    output_dim = 64
+    # hyperparameter args
+    parser.add_argument('--n_way', type=int, default=64,
+                        help="Number of classes per episode")
+    parser.add_argument('n_episodes', type=int, default=390,
+                        help="Number of episodes")
+    parser.add_argument('n_supports', type=int, default=5,
+                        help="Number of support examples per classes")
+    parser.add_argument('n_queries', type=int, default=5,
+                        help="Number of query examples per classes")
 
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    # resume training
+    parser.add_argument('--resume', default=None, type=str,
+                        help="Path to the checkpoint to resume from (default: None)")
+
+    return parser.parse_args()
 
 
-def data_initialization(n_way, n_episodes, n_support, n_queries):
-    folder_dataset = datasets.ImageFolder(root=Config.training_dir)
-    train_dataset = CardDataset(image_folder_dataset=folder_dataset, n_support=n_support, n_queries=n_queries,
+def data_initialization(training_dir, n_way, n_episodes, n_supports, n_queries):
+    folder_dataset = datasets.ImageFolder(root=training_dir)
+    train_dataset = CardDataset(image_folder_dataset=folder_dataset, n_supports=n_supports, n_queries=n_queries,
                                 transform=data_transforms)
 
     batch_sampler = EpisodicBatchSampler(len(train_dataset), n_way, n_episodes)
@@ -42,11 +64,11 @@ def data_initialization(n_way, n_episodes, n_support, n_queries):
     return DataLoader(train_dataset, batch_sampler=batch_sampler, num_workers=0)
 
 
-def train(model, optimizer, train_dataloader, n_way, n_support, n_queries):
+def train(model, optimizer, train_dataloader, epochs, n_way, n_support, n_queries, device):
     results_history = {'loss': [], 'acc': []}
 
     print("Start training")
-    for epoch in range(Config.train_number_epochs):
+    for epoch in range(epochs):
         model.train()
 
         for batch in tqdm(train_dataloader, desc="Epoch {:d} train".format(epoch), colour='cyan'):
@@ -54,10 +76,10 @@ def train(model, optimizer, train_dataloader, n_way, n_support, n_queries):
 
             assert batch['supports'].size(0) == batch['queries'].size(0)
 
-            supports = batch['supports'].to(Config.device)
-            queries = batch['queries'].to(Config.device)
+            supports = batch['supports'].to(device)
+            queries = batch['queries'].to(device)
 
-            label = torch.arange(0, n_way).view(n_way, 1, 1).expand(n_way, n_queries, 1).long().to(Config.device)
+            label = torch.arange(0, n_way).view(n_way, 1, 1).expand(n_way, n_queries, 1).long().to(device)
 
             inputs = cat([
                 supports.view(n_way * n_support, *supports.size()[2:]),
@@ -90,26 +112,39 @@ def train(model, optimizer, train_dataloader, n_way, n_support, n_queries):
     save(model.state_dict(), save_path)
 
 
-if __name__ == '__main__':
+def main(args):
+    if args.device == '':
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    else:
+        device = args.device
+
     train_dataloader = data_initialization(
-        n_support=Config.n_support,
-        n_queries=Config.n_queries,
-        n_episodes=Config.n_episodes,
-        n_way=Config.n_way
+        training_dir=args.dat_path,
+        n_supports=args.n_supports,
+        n_queries=args.n_queries,
+        n_episodes=args.n_episodes,
+        n_way=args.n_way
     )
 
     model = ProtoNet(
-        input_dim=Config.input_dim,
-        hidden_dim=Config.hidden_dim,
-        output_dim=Config.output_dim
-    ).to(Config.device)
-    optimizer = optim.Adam(model.parameters(), lr=Config.lr)
+        input_dim=args.input_dim,
+        hidden_dim=args.hidden_dim,
+        output_dim=args.output_dim
+    ).to(device)
+    optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
     train(
         model=model,
         optimizer=optimizer,
         train_dataloader=train_dataloader,
-        n_way=Config.n_way,
-        n_support=Config.n_support,
-        n_queries=Config.n_queries
+        epochs=args.epochs,
+        n_way=args.n_way,
+        n_support=args.n_support,
+        n_queries=args.n_queries,
+        device=device
     )
+
+
+if __name__ == '__main__':
+    args = parse_command_line()
+    main(args)
