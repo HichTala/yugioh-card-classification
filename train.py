@@ -20,7 +20,7 @@ class Config:
 
     lr = 0.0005
 
-    n_way = 1000  # Number of classes per episode
+    n_way = 128  # Number of classes per episode
     n_episodes = 22  # Number of episodes
     n_support = 5  # Number of support examples per classes
     n_queries = 5  # Number of query examples per classes
@@ -58,8 +58,7 @@ def train(model, optimizer, train_dataloader, n_way, n_support, n_queries):
             supports = batch['supports'].to(Config.device)
             queries = batch['queries'].to(Config.device)
 
-            label = label.view(n_way, 1, 1).expand(n_way, n_queries, 1).long()
-            label = tensor(label, requires_grad=False).to(Config.device)
+            label = label.view(n_way, 1, 1).expand(n_way, n_queries, 1).short().to(Config.device)
 
             inputs = cat([
                 supports.view(n_way * n_support, *supports.size()[2:]),
