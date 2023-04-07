@@ -32,14 +32,6 @@ def parse_command_line():
     parser.add_argument('--device', type=str, default=None,
                         help="device to use for training (default: cuda if available cpu otherwise)")
 
-    # model args
-    parser.add_argument('--input_dim', type=int, default=3,
-                        help="input image number of channel (default: 3)")
-    parser.add_argument('--hidden_dim', type=int, default=64,
-                        help="hidden layer dimensions (default: 64)")
-    parser.add_argument('--output_dim', type=int, default=64,
-                        help="model output dimensions")
-
     # hyperparameter args
     parser.add_argument('--n_way', type=int, default=32,
                         help="Number of classes per episode")
@@ -152,11 +144,7 @@ def main(args):
         n_way=args.n_way
     )
 
-    model = ResNet(
-        input_dim=args.input_dim,
-        hidden_dim=args.hidden_dim,
-        output_dim=args.output_dim
-    ).to(device)
+    model = ResNet().to(device)
 
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
     results_history = {'loss': [], 'acc': []}
