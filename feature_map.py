@@ -2,6 +2,7 @@ import argparse
 import os
 import pickle
 
+import numpy as np
 from PIL import Image
 from torch import load
 from torch.cuda import is_available
@@ -19,6 +20,8 @@ def parse_command_line():
                         help="Path to training dataset's directory")
     parser.add_argument('--limit', default=20, type=int,
                         help="Number of cards per partitions")
+    parser.add_argument('--dataset_size', default=10856, type=int,
+                        help="Number of cards in total in the dataset (default: 10856)")
 
     # model args
     parser.add_argument('--input_dim', type=int, default=3,
@@ -29,6 +32,14 @@ def parse_command_line():
                         help="model output dimensions")
     parser.add_argument('model_path', default='./cardDatabaseFull/', type=str,
                         help="Path to trained model's checkpoint")
+    parser.add_argument('--device', type=str, default=None,
+                        help="device to use for training (default: cuda if available cpu otherwise)")
+
+    # option args
+    parser.add_argument('--partition', action='store_true',
+                        help="create feature map partitions (default: False)")
+    parser.add_argument('--merge', action='store_true',
+                        help="merge feature map partitions (default: False)")
 
     return parser.parse_args()
 
@@ -104,17 +115,20 @@ def merge_feature_map(partition_number):
 
 
 def main(args):
-    device = 'cuda' if is_available() else 'cpu'
+    if args.device is None:
+        device = 'cuda' if is_available() else 'cpu'
+    else:
+        device = args.device
 
-    model = ResNet(
-        input_dim=args.input_dim,
-        hidden_dim=args.hidden_dim,
-        output_dim=args.output_dim
-    ).to(device)
+    model = ResNet().to(device)
     model.load_state_dict(load(args.model_path)['model_state_dict'])
 
-    partition_number = feature_map_partition(model=model, limit=args.limit)
-    merge_feature_map(partition_number=partition_number)
+    partition_number = np.ceil(args.dataset_size/args.limit)
+
+    if args.partition:
+        partition_number = feature_map_partition(model=model, limit=args.limit)
+    if args.merge:
+        merge_feature_map(partition_number=partition_number)
 
 
 if __name__ == '__main__':
