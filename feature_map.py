@@ -39,67 +39,66 @@ def feature_map_partition(model):
     count = 0
     limit = 20
     limit_count = 0
-    for subdir, dirs, files in tqdm(os.walk(args.data_path), desc="Saving pickles:", colour='cyan'):
-        for file in files:
-            if file.endswith(".png") or file.endswith(".jpg") or file.endswith(".jpeg"):
+    with tqdm(total=10856, desc="Saving pickles:", colour='cyan') as pbar:
+        for subdir, dirs, files in os.walk(args.data_path):
+            for file in files:
+                if file.endswith(".png") or file.endswith(".jpg") or file.endswith(".jpeg"):
 
-                count += 1
-                abs_file_path = os.path.join(subdir, file)
+                    count += 1
+                    pbar.update(1)
+                    abs_file_path = os.path.join(subdir, file)
 
-                img = Image.open(abs_file_path)
-                inputs = final_data_transforms(img)
-                inputs = inputs.to(device)
-                inputs = inputs.unsqueeze(dim=0)
+                    img = Image.open(abs_file_path)
+                    inputs = final_data_transforms(img)
+                    inputs = inputs.to(device)
+                    inputs = inputs.unsqueeze(dim=0)
 
-                outputs = model(inputs)
+                    outputs = model(inputs)
 
-                dir_name = subdir.split('/')[-1]
+                    dir_name = subdir.split('/')[-1]
 
-                feature_map[dir_name] = (abs_file_path, outputs)
+                    feature_map[dir_name] = (abs_file_path, outputs)
 
-                if count % limit == 0:
-                    save_path = './feature_maps/feature_maps_partition/feature_map_{}.pkl'.format(limit_count)
+                    if count % limit == 0:
+                        save_path = './feature_maps/feature_maps_partition/feature_map_{}.pkl'.format(limit_count)
 
-                    with open(save_path, "wb") as f:
-                        pickle.dump(feature_map, f)
-                    f.close()
+                        with open(save_path, "wb") as f:
+                            pickle.dump(feature_map, f)
+                        f.close()
 
-                    feature_map = {}
-                    limit_count += 1
+                        feature_map = {}
+                        limit_count += 1
 
-    save_path = './feature_map/feature_map_{}.pkl'.format(limit_count)
+    save_path = './feature_maps/feature_maps_partition/feature_map_{}.pkl'.format(limit_count)
 
     with open(save_path, "wb") as f:
         pickle.dump(feature_map, f)
+    f.close()
 
     print("{} Cards has been saved to feature_map_{}".format(len(feature_map), limit_count))
+    return limit_count
 
 
-def merge_feature_map():
+def merge_feature_map(partition_number):
     feature_map_dir = './feature_maps/feature_maps_partition/'
     feature_map = {}
 
-    for i, files in enumerate(tqdm(os.listdir(feature_map_dir), desc="Merging pickles:", colour='cyan')):
-        abs_path = feature_map_dir + files
+    with tqdm(total=partition_number, desc="Merging pickles:", colour='cyan') as pbar:
+        for i, files in enumerate(os.listdir(feature_map_dir)):
+            abs_path = feature_map_dir + files
 
-        with open(abs_path, "rb") as f:
-            tmp = pickle.load(f)
-        f.close()
+            with open(abs_path, "rb") as f:
+                tmp = pickle.load(f)
+            f.close()
 
-        feature_map.update(tmp)
-        del tmp
+            feature_map.update(tmp)
+            del tmp
 
-        if i % 100 == 0:
-            print("{} Pickle files merged already !".format(i))
-
-        print('{} Cards saved'.format(len(feature_map)))
-
-        print("Saving feature map")
-        savePath = './feature_map.pkl'
-        with open(savePath, "wb") as f:
-            pickle.dump(feature_map, f)
-        f.close()
-        print('Feature map saved!')
+            savePath = './feature_map.pkl'
+            with open(savePath, "wb") as f:
+                pickle.dump(feature_map, f)
+            f.close()
+            pbar.update(1)
 
 
 def main(args):
@@ -112,8 +111,8 @@ def main(args):
     ).to(device)
     model.load_state_dict(load(args.model_path)['model_state_dict'])
 
-    feature_map_partition(model=model)
-    merge_feature_map()
+    partition_number = feature_map_partition(model=model)
+    merge_feature_map(partition_number=partition_number)
 
 
 if __name__ == '__main__':
