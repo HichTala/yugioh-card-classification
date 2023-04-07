@@ -17,6 +17,8 @@ def parse_command_line():
     # data args
     parser.add_argument('--data_path', default='./cardDatabaseFull/', type=str,
                         help="Path to training dataset's directory")
+    parser.add_argument('--limit', default=20, type=int,
+                        help="Number of cards per partitions")
 
     # model args
     parser.add_argument('--input_dim', type=int, default=3,
@@ -31,13 +33,12 @@ def parse_command_line():
     return parser.parse_args()
 
 
-def feature_map_partition(model):
+def feature_map_partition(model, limit):
     device = 'cuda' if is_available() else 'cpu'
 
     feature_map = {}
 
     count = 0
-    limit = 20
     limit_count = 0
     with tqdm(total=10856, desc="Saving pickles:", colour='cyan') as pbar:
         for subdir, dirs, files in os.walk(args.data_path):
@@ -69,13 +70,13 @@ def feature_map_partition(model):
                         feature_map = {}
                         limit_count += 1
 
-    save_path = './feature_maps/feature_maps_partition/feature_map_{}.pkl'.format(limit_count)
+    save_path = './feature_maps/feature_maps_partition/feature_map_{}.pkl'.format(limit_count+1)
 
     with open(save_path, "wb") as f:
         pickle.dump(feature_map, f)
     f.close()
 
-    print("{} Cards has been saved to feature_map_{}".format(len(feature_map), limit_count))
+    print("All cards have been saved in {} partitions".format(limit_count))
     return limit_count
 
 
@@ -99,6 +100,7 @@ def merge_feature_map(partition_number):
                 pickle.dump(feature_map, f)
             f.close()
             pbar.update(1)
+    print("{} partitions have been merged !".format(partition_number))
 
 
 def main(args):
@@ -111,7 +113,7 @@ def main(args):
     ).to(device)
     model.load_state_dict(load(args.model_path)['model_state_dict'])
 
-    partition_number = feature_map_partition(model=model)
+    partition_number = feature_map_partition(model=model, limit=args.limit)
     merge_feature_map(partition_number=partition_number)
 
 
