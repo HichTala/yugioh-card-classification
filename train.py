@@ -1,6 +1,9 @@
 import argparse
 
 import numpy as np
+from torch.utils.tensorboard import SummaryWriter
+
+import wandb
 from torch import optim, save, load, cat, arange
 from torch.cuda import is_available
 from torch.utils.data import DataLoader
@@ -24,8 +27,8 @@ def parse_command_line():
     # train args
     parser.add_argument('--epochs', default=300, type=int,
                         help="Number of epochs to train (default: 300)")
-    parser.add_argument('--lr', default=0.01, type=float,
-                        help="learning rate (default: 0.001)")
+    parser.add_argument('--lr', default=5e-4, type=float,
+                        help="learning rate (default: 0.1)")
     parser.add_argument('--device', type=str, default=None,
                         help="device to use for training (default: cuda if available cpu otherwise)")
 
@@ -38,9 +41,9 @@ def parse_command_line():
                         help="model output dimensions")
 
     # hyperparameter args
-    parser.add_argument('--n_way', type=int, default=64,
+    parser.add_argument('--n_way', type=int, default=32,
                         help="Number of classes per episode")
-    parser.add_argument('--n_episodes', type=int, default=390,
+    parser.add_argument('--n_episodes', type=int, default=784,
                         help="Number of episodes")
     parser.add_argument('--n_supports', type=int, default=5,
                         help="Number of support examples per classes")
@@ -65,13 +68,15 @@ def data_initialization(training_dir, n_way, n_episodes, n_supports, n_queries):
 
 
 def train(model, optimizer, results_history, train_dataloader, epochs, n_way, n_supports, n_queries, device):
+    writer = SummaryWriter('./models/runs')
+    n_iter = 0
+
     print("Start training")
     for epoch in range(epochs):
         model.train()
 
+        optimizer.zero_grad()
         for batch in tqdm(train_dataloader, desc="\033[1mEpoch {:d}\033[0m train".format(epoch), colour='cyan'):
-            optimizer.zero_grad()
-
             assert batch['supports'].size(0) == batch['queries'].size(0)
 
             supports = batch['supports'].to(device)
@@ -87,14 +92,30 @@ def train(model, optimizer, results_history, train_dataloader, epochs, n_way, n_
             outputs = model(inputs)
 
             loss, results = loss_fn(outputs, label, n_way, n_supports, n_queries)
-
             loss.backward()
-            optimizer.step()
 
             results_history['loss'].append(results['loss'])
             results_history['acc'].append(results['acc'])
 
-        print("\033[1m\033[96mloss\033[0m: {}, \033[1m\033[96macc\033[0m: {}".format(np.mean(results_history['loss']), np.mean(results_history['acc'])))
+            wandb.log(results)
+
+            writer.add_scalar('Train/Loss', results['loss'], n_iter)
+            writer.add_scalar('Train/Accuracy', results['acc'], n_iter)
+            n_iter += 1
+
+        optimizer.step()
+
+        wandb.log({
+            'mean-loss': np.mean(results_history['loss']),
+            'mean-acc': np.mean(results_history['acc']),
+            'max-loss': np.max(results_history['loss']),
+            'min-acc': np.min(results_history['acc']),
+        })
+
+        print("\033[1m\033[96mloss\033[0m: {}, \033[1m\033[96macc\033[0m: {}".format(
+            np.mean(results_history['loss']),
+            np.mean(results_history['acc'])
+        ))
 
         save_path = './models/checkpoints/proto_epoch_{}.pth'.format(epoch)
         save({
@@ -103,7 +124,7 @@ def train(model, optimizer, results_history, train_dataloader, epochs, n_way, n_
             'results': results_history
         }, save_path)
 
-        epoch += 1
+    wandb.finish()
 
     save_path = './models/proto.pth'
     save(model.state_dict(), save_path)
@@ -114,6 +135,14 @@ def main(args):
         device = 'cuda' if is_available() else 'cpu'
     else:
         device = args.device
+
+    wandb.init(
+        project="ygo-card-classification",
+        config={
+            "learning_rate": args.lr,
+            "architecture": 'Resnet'
+        }
+    )
 
     train_dataloader = data_initialization(
         training_dir=args.data_path,
