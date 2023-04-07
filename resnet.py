@@ -14,14 +14,14 @@ def conv_block(in_channels, out_channels):
     )
 
 
-class ProtoNet(nn.Module):
+class ResNet(nn.Module):
     """
     Model as described in the reference paper,
     source: https://github.com/jakesnell/prototypical-networks/blob/f0c48808e496989d01db59f86d4449d7aee9ab0c/protonets/models/few_shot.py#L62-L84
     """
 
     def __init__(self, input_dim=1, hidden_dim=64, output_dim=64):
-        super(ProtoNet, self).__init__()
+        super(ResNet, self).__init__()
         self.encoder = nn.Sequential(
             conv_block(input_dim, hidden_dim),
             conv_block(hidden_dim, hidden_dim),

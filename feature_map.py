@@ -7,7 +7,7 @@ from torch import load
 from torch.cuda import is_available
 from tqdm import tqdm
 
-from protonet import ProtoNet
+from resnet import ResNet
 from transformations import final_data_transforms
 
 
@@ -105,7 +105,7 @@ def merge_feature_map():
 def main(args):
     device = 'cuda' if is_available() else 'cpu'
 
-    model = ProtoNet(
+    model = ResNet(
         input_dim=args.input_dim,
         hidden_dim=args.hidden_dim,
         output_dim=args.output_dim

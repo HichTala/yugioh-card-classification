@@ -11,7 +11,7 @@ from torchvision import datasets
 from tqdm import tqdm
 
 from card_dataset import CardDataset
-from protonet import ProtoNet
+from resnet import ResNet
 from prototypical_loss import prototypical_loss as loss_fn
 from sampler import EpisodicBatchSampler
 from transformations import train_data_transforms
@@ -27,7 +27,7 @@ def parse_command_line():
     # train args
     parser.add_argument('--epochs', default=300, type=int,
                         help="Number of epochs to train (default: 300)")
-    parser.add_argument('--lr', default=5e-4, type=float,
+    parser.add_argument('--lr', default=0.001, type=float,
                         help="learning rate (default: 0.1)")
     parser.add_argument('--device', type=str, default=None,
                         help="device to use for training (default: cuda if available cpu otherwise)")
@@ -152,7 +152,7 @@ def main(args):
         n_way=args.n_way
     )
 
-    model = ProtoNet(
+    model = ResNet(
         input_dim=args.input_dim,
         hidden_dim=args.hidden_dim,
         output_dim=args.output_dim
