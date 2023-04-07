@@ -1,4 +1,5 @@
 import torch.nn as nn
+from torchvision.models import resnet50, ResNet50_Weights
 
 
 def conv_block(in_channels, out_channels):
@@ -27,7 +28,8 @@ class ProtoNet(nn.Module):
             conv_block(hidden_dim, hidden_dim),
             conv_block(hidden_dim, output_dim),
         )
+        self.resnet = resnet50(weights=ResNet50_Weights.IMAGENET1K_V2)
 
     def forward(self, x):
-        x = self.encoder(x)
+        x = self.resnet(x)
         return x.reshape(x.size(0), -1)
