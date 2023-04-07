@@ -67,6 +67,9 @@ def train(model, optimizer, results_history, train_dataloader, epochs, n_way, n_
     for epoch in range(epochs):
         model.train()
 
+        max_loss = np.inf
+        min_acc = 0
+
         for batch in tqdm(train_dataloader, desc="\033[1mEpoch {:d}\033[0m train".format(epoch), colour='cyan'):
             optimizer.zero_grad()
 
@@ -89,6 +92,9 @@ def train(model, optimizer, results_history, train_dataloader, epochs, n_way, n_
             loss.backward()
             optimizer.step()
 
+            max_loss = max(max_loss, results['loss'])
+            min_acc = min(min_acc, results['acc'])
+
             results_history['loss'].append(results['loss'])
             results_history['acc'].append(results['acc'])
 
@@ -101,8 +107,8 @@ def train(model, optimizer, results_history, train_dataloader, epochs, n_way, n_
         wandb.log({
             'mean-loss': np.mean(results_history['loss']),
             'mean-acc': np.mean(results_history['acc']),
-            'max-loss': np.max(results_history['loss']),
-            'min-acc': np.min(results_history['acc']),
+            'max-loss': np.max(max_loss),
+            'min-acc': np.min(min_acc),
         })
 
         print("\033[1m\033[96mloss\033[0m: {}, \033[1m\033[96macc\033[0m: {}".format(
