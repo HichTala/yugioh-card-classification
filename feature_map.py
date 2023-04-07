@@ -95,7 +95,7 @@ def merge_feature_map(partition_number):
             feature_map.update(tmp)
             del tmp
 
-            savePath = './feature_map.pkl'
+            savePath = './feature_maps/feature_map.pkl'
             with open(savePath, "wb") as f:
                 pickle.dump(feature_map, f)
             f.close()
