@@ -4,8 +4,8 @@ from torchvision import transforms as T
 
 
 def train_data_transforms(img):
-    img = T.Resize(50, antialias=True)(img)
-    img = T.Resize((75, 50), antialias=True)(img)
+    # img = T.Resize(60, antialias=True)(img)
+    img = T.Resize((53, 65), antialias=True)(img)
 
     gamma = normalvariate(mu=1, sigma=0.3)
     gamma = gamma if gamma >= 0 else 0
