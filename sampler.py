@@ -2,7 +2,7 @@ import numpy as np
 
 
 class EpisodicBatchSampler(object):
-    def __init__(self, n_classes, n_way, n_episodes):
+    def __init__(self, n_classes, n_way):
         self.n_classes = n_classes
         self.n_way = n_way
 

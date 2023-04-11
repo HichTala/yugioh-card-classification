@@ -36,8 +36,8 @@ def parse_command_line():
     # hyperparameter args
     parser.add_argument('--n_way', type=int, default=8,
                         help="Number of classes per partitions (default: 8")
-    parser.add_argument('--n_episodes', type=int, default=2,
-                        help="Number of episodes (default: 2)")
+    # parser.add_argument('--n_episodes', type=int, default=2,
+    #                     help="Number of episodes (default: 2)")
     parser.add_argument('--n_supports', type=int, default=5,
                         help="Number of support examples per classes (default: 5)")
     parser.add_argument('--n_queries', type=int, default=5,
@@ -50,17 +50,17 @@ def parse_command_line():
     return parser.parse_args()
 
 
-def data_initialization(training_dir, n_way, n_episodes, n_supports, n_queries):
+def data_initialization(training_dir, n_way, n_supports, n_queries):
     folder_dataset = datasets.ImageFolder(root=training_dir)
     train_dataset = CardDataset(image_folder_dataset=folder_dataset, n_supports=n_supports, n_queries=n_queries,
                                 transform=train_data_transforms)
 
-    batch_sampler = EpisodicBatchSampler(len(train_dataset), n_way, n_episodes)
+    batch_sampler = EpisodicBatchSampler(len(train_dataset), n_way)
 
     return DataLoader(train_dataset, batch_sampler=batch_sampler, num_workers=0)
 
 
-def train(model, optimizer, results_history, train_dataloader, epochs, n_episodes, n_way, n_supports, n_queries,
+def train(model, optimizer, results_history, train_dataloader, epochs, n_way, n_supports, n_queries,
           device):
     writer = SummaryWriter('./models/runs')
     n_iter = 0
@@ -72,52 +72,50 @@ def train(model, optimizer, results_history, train_dataloader, epochs, n_episode
         max_loss = np.inf
         min_acc = 0
 
-        for episode in range(n_episodes):
+        for i, batch in enumerate(
+                tqdm(train_dataloader, desc="\033[1mEpoch {:d}\033[0m train".format(epoch), colour='cyan')):
+            optimizer.zero_grad()
 
-            for i, batch in enumerate(
-                    tqdm(train_dataloader, desc="\033[1mEpoch {:d}\033[0m train".format(epoch), colour='cyan')):
-                optimizer.zero_grad()
+            assert batch['supports'].size(0) == batch['queries'].size(0)
 
-                assert batch['supports'].size(0) == batch['queries'].size(0)
+            supports = batch['supports'].to(device)
+            queries = batch['queries'].to(device)
 
-                supports = batch['supports'].to(device)
-                queries = batch['queries'].to(device)
+            inputs = cat([
+                supports.view(n_way * n_supports, *supports.size()[2:]),
+                queries.view(n_way * n_queries, *queries.size()[2:])
+            ], dim=0)
 
-                inputs = cat([
-                    supports.view(n_way * n_supports, *supports.size()[2:]),
-                    queries.view(n_way * n_queries, *queries.size()[2:])
-                ], dim=0)
+            outputs = model(inputs)
 
-                outputs = model(inputs)
+            supports_path = './models/pickles/supports/pickle_{}'.format(i)
+            with open(supports_path, "wb") as f:
+                pickle.dump(outputs[:n_way * n_supports], f)
+            f.close()
 
-                supports_path = './models/pickles/supports/pickle_{}'.format(i)
-                with open(supports_path, "wb") as f:
-                    pickle.dump(outputs[:n_way * n_supports], f)
-                f.close()
+            queries_path = './models/pickles/queries/pickle_{}'.format(i)
+            with open(queries_path, "wb") as f:
+                pickle.dump(outputs[n_way * n_queries:], f)
+            f.close()
 
-                queries_path = './models/pickles/queries/pickle_{}'.format(i)
-                with open(queries_path, "wb") as f:
-                    pickle.dump(outputs[n_way * n_queries:], f)
-                f.close()
+            del outputs
 
-                del outputs
+        loss, results = loss_fn(n_way, n_supports, n_queries)
 
-            loss, results = loss_fn(n_way, n_supports, n_queries)
+        loss.backward()
+        optimizer.step()
 
-            loss.backward()
-            optimizer.step()
+        max_loss = min(max_loss, results['loss'])
+        min_acc = max(min_acc, results['acc'])
 
-            max_loss = min(max_loss, results['loss'])
-            min_acc = max(min_acc, results['acc'])
+        results_history['loss'].append(results['loss'])
+        results_history['acc'].append(results['acc'])
 
-            results_history['loss'].append(results['loss'])
-            results_history['acc'].append(results['acc'])
+        wandb.log(results)
 
-            wandb.log(results)
-
-            writer.add_scalar('Train/Loss', results['loss'], n_iter)
-            writer.add_scalar('Train/Accuracy', results['acc'], n_iter)
-            n_iter += 1
+        writer.add_scalar('Train/Loss', results['loss'], n_iter)
+        writer.add_scalar('Train/Accuracy', results['acc'], n_iter)
+        n_iter += 1
 
         wandb.log({
             'mean-loss': np.mean(results_history['loss']),
@@ -162,7 +160,6 @@ def main(args):
         training_dir=args.data_path,
         n_supports=args.n_supports,
         n_queries=args.n_queries,
-        n_episodes=args.n_episodes,
         n_way=args.n_way
     )
 
@@ -183,7 +180,6 @@ def main(args):
         results_history=results_history,
         train_dataloader=train_dataloader,
         epochs=args.epochs,
-        n_episodes=args.n_episodes,
         n_way=args.n_way,
         n_supports=args.n_supports,
         n_queries=args.n_queries,
