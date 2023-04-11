@@ -1,4 +1,5 @@
 import argparse
+import pickle
 
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
@@ -27,20 +28,20 @@ def parse_command_line():
     # train args
     parser.add_argument('--epochs', default=300, type=int,
                         help="Number of epochs to train (default: 300)")
-    parser.add_argument('--lr', default=0.0001, type=float,
-                        help="learning rate (default: 0.0001)")
+    parser.add_argument('--lr', default=1e-3, type=float,
+                        help="learning rate (default: 0.001)")
     parser.add_argument('--device', type=str, default=None,
                         help="device to use for training (default: cuda if available cpu otherwise)")
 
     # hyperparameter args
-    parser.add_argument('--n_way', type=int, default=32,
-                        help="Number of classes per episode")
-    parser.add_argument('--n_episodes', type=int, default=784,
-                        help="Number of episodes")
+    parser.add_argument('--n_way', type=int, default=8,
+                        help="Number of classes per partitions (default: 8")
+    parser.add_argument('--n_episodes', type=int, default=2,
+                        help="Number of episodes (default: 2)")
     parser.add_argument('--n_supports', type=int, default=5,
-                        help="Number of support examples per classes")
+                        help="Number of support examples per classes (default: 5)")
     parser.add_argument('--n_queries', type=int, default=5,
-                        help="Number of query examples per classes")
+                        help="Number of query examples per classes (default: 5)")
 
     # resume training
     parser.add_argument('--resume', default=None, type=str,
@@ -59,41 +60,56 @@ def data_initialization(training_dir, n_way, n_episodes, n_supports, n_queries):
     return DataLoader(train_dataset, batch_sampler=batch_sampler, num_workers=0)
 
 
-def train(model, optimizer, results_history, train_dataloader, epochs, n_way, n_supports, n_queries, device):
+def train(model, optimizer, results_history, train_dataloader, epochs, n_episodes, n_way, n_supports, n_queries,
+          device):
     writer = SummaryWriter('./models/runs')
     n_iter = 0
 
     print("Start training")
+    model.train()
     for epoch in range(epochs):
-        model.train()
 
         max_loss = np.inf
         min_acc = 0
 
-        for batch in tqdm(train_dataloader, desc="\033[1mEpoch {:d}\033[0m train".format(epoch), colour='cyan'):
-            optimizer.zero_grad()
+        for episode in range(n_episodes):
 
-            assert batch['supports'].size(0) == batch['queries'].size(0)
+            for i, batch in enumerate(
+                    tqdm(train_dataloader, desc="\033[1mEpoch {:d}\033[0m train".format(epoch), colour='cyan')):
+                optimizer.zero_grad()
 
-            supports = batch['supports'].to(device)
-            queries = batch['queries'].to(device)
+                assert batch['supports'].size(0) == batch['queries'].size(0)
 
-            label = arange(0, n_way).view(n_way, 1, 1).expand(n_way, n_queries, 1).long().to(device)
+                supports = batch['supports'].to(device)
+                queries = batch['queries'].to(device)
 
-            inputs = cat([
-                supports.view(n_way * n_supports, *supports.size()[2:]),
-                supports.view(n_way * n_queries, *queries.size()[2:])
-            ], dim=0)
+                inputs = cat([
+                    supports.view(n_way * n_supports, *supports.size()[2:]),
+                    queries.view(n_way * n_queries, *queries.size()[2:])
+                ], dim=0)
 
-            outputs = model(inputs)
+                outputs = model(inputs)
 
-            loss, results = loss_fn(outputs, label, n_way, n_supports, n_queries)
+                supports_path = './models/pickles/supports/pickle_{}'.format(i)
+                with open(supports_path, "wb") as f:
+                    pickle.dump(outputs[:n_way * n_supports], f)
+                f.close()
+
+                queries_path = './models/pickles/queries/pickle_{}'.format(i)
+                with open(queries_path, "wb") as f:
+                    pickle.dump(outputs[n_way * n_queries:], f)
+                f.close()
+
+                del outputs
+
+            loss, results = loss_fn(n_way, n_supports, n_queries)
 
             loss.backward()
             optimizer.step()
 
             max_loss = max(max_loss, results['loss'])
             min_acc = min(min_acc, results['acc'])
+            raise breakpoint()
 
             results_history['loss'].append(results['loss'])
             results_history['acc'].append(results['acc'])
@@ -107,8 +123,8 @@ def train(model, optimizer, results_history, train_dataloader, epochs, n_way, n_
         wandb.log({
             'mean-loss': np.mean(results_history['loss']),
             'mean-acc': np.mean(results_history['acc']),
-            'max-loss': np.max(max_loss),
-            'min-acc': np.min(min_acc),
+            'max-loss': max_loss,
+            'min-acc': min_acc,
         })
 
         print("\033[1m\033[96mloss\033[0m: {}, \033[1m\033[96macc\033[0m: {}".format(
@@ -168,6 +184,7 @@ def main(args):
         results_history=results_history,
         train_dataloader=train_dataloader,
         epochs=args.epochs,
+        n_episodes=args.n_episodes,
         n_way=args.n_way,
         n_supports=args.n_supports,
         n_queries=args.n_queries,
