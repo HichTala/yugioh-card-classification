@@ -107,9 +107,8 @@ def train(model, optimizer, results_history, train_dataloader, epochs, n_episode
             loss.backward()
             optimizer.step()
 
-            max_loss = max(max_loss, results['loss'])
-            min_acc = min(min_acc, results['acc'])
-            raise breakpoint()
+            max_loss = min(max_loss, results['loss'])
+            min_acc = max(min_acc, results['acc'])
 
             results_history['loss'].append(results['loss'])
             results_history['acc'].append(results['acc'])
