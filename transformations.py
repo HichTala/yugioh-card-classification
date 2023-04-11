@@ -8,9 +8,12 @@ def train_data_transforms(img):
     img = T.Resize((75, 50), antialias=True)(img)
 
     gamma = normalvariate(mu=0.75, sigma=0.2)
-    gamma = gamma if gamma >= 0 else 0
+    gamma = max(gamma, 0.15)
     gain = normalvariate(mu=1.15, sigma=0.15)
+    gain = max(gain, 0.7)
+    gain = min(gain, 1.6)
     sat_factor = normalvariate(mu=0.8, sigma=0.15)
+    sat_factor = max(sat_factor, 0.35)
     hue_factor = normalvariate(mu=0, sigma=0.025)
 
     img = T.functional.adjust_gamma(img, gamma=gamma, gain=gain)
@@ -28,7 +31,7 @@ def final_data_transforms(img):
 
     img = T.functional.adjust_gamma(img, gamma=1, gain=1)
     img = T.functional.adjust_saturation(img, saturation_factor=0.7)
-    img = T.GaussianBlur(kernel_size=(5, 9), sigma=2.5)(img)
+    # img = T.GaussianBlur(kernel_size=(5, 9), sigma=0.5)(img)
     img = T.functional.adjust_hue(img, hue_factor=0)
 
     img = T.ToTensor()(img)
@@ -41,7 +44,7 @@ def image_transforms(img):
     img = T.Resize((98, 65), antialias=True)(img)
 
     img = T.ToTensor()(img)
-    img = T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])(img)
+    # img = T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])(img)
 
     return img
 
