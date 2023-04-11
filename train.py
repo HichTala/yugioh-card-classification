@@ -111,13 +111,13 @@ def train(model, optimizer, results_history, train_dataloader, epochs, n_way, n_
         results_history['loss'].append(results['loss'])
         results_history['acc'].append(results['acc'])
 
-        wandb.log(results)
-
         writer.add_scalar('Train/Loss', results['loss'], n_iter)
         writer.add_scalar('Train/Accuracy', results['acc'], n_iter)
         n_iter += 1
 
         wandb.log({
+            'loss': results['loss'],
+            'acc': results['acc'],
             'mean-loss': np.mean(results_history['loss']),
             'mean-acc': np.mean(results_history['acc']),
             'max-loss': max_loss,
