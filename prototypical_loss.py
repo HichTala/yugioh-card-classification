@@ -60,12 +60,12 @@ def prototypical_loss(n_classes, n_supports, n_queries):
     log_p_y = F.log_softmax(-dists, dim=1).view(n_classes, n_queries, -1)
     label = torch.arange(0, n_classes).view(n_classes, 1, 1).expand(n_classes, n_queries, 1).long().cuda()
 
-    del dists, label
-
     loss_val = -log_p_y.gather(2, label).squeeze().view(-1).mean()
 
     _, y_hat = log_p_y.max(2)
     acc_val = torch.eq(y_hat, label.squeeze()).float().mean()
+
+    del dists, label
 
     return loss_val, {
         'loss': loss_val.item(),
