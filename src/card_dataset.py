@@ -4,7 +4,7 @@ import torchvision.transforms as T
 
 from PIL import Image
 
-from tools import art_cropper
+from src.tools import art_cropper
 
 
 class CardDataset(Dataset):

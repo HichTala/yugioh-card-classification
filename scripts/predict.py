@@ -1,36 +1,79 @@
-import os
 import pickle
 
 import cv2
 import numpy as np
+import torch
 from PIL import Image
 from torch import load
-from torch.nn.functional import pairwise_distance
+from torch.cuda import is_available
 
-from tools import art_cropper, calculate_HOG_points, calculate_SIFT_score
-from transformations import data_transforms, image_transforms, data_transforms_no_tensor, image_transforms_no_tensor
+from src.resnet import ResNet
+from utils.tools import art_cropper, calculate_HOG_points, calculate_SIFT_score
+from utils.transformations import image_transforms, image_transforms_no_tensor
+
+
+class Config:
+    image_path_list = ['./queries/gg_0.jpg',
+                       './queries/hl2_0.jpg',
+                       './queries/isct_0.jpg',
+                       './queries/sdc_0.jpg',
+                       './queries/srl_0.jpg',
+                       './queries/251194600.jpg',
+                       './queries/rh_0.jpg',
+                       './queries/pog_0.jpg']
+
+    labels = ['Giant-Germ-0-95178994',
+              'Harpie-Lady-2-0-27927359',
+              'Flying-Kamakiri-1-0-84834865',
+              'Chaos-Sorcerer-0-9596126',
+              'Swords-of-Revealing-Light-0-72302403',
+              'YZTank-Dragon-0-25119460',
+              'Harpie-Queen-0-75064463',
+              'Pot-of-Greed-0-55144522']
+
+    trained_model_path = "./models/lr=0.00001/proto_epoch_122.pth"
+    feature_map_path = "../feature_maps/lr=0.00001/feature_map_122eps.pkl"
+
+
+def euclidean_dist(x, y):
+    """
+    Compute euclidean distance between two tensors
+    """
+    # x: N x D
+    # y: M x D
+    n = x.size(0)
+    m = y.size(0)
+    d = x.size(1)
+    if d != y.size(1):
+        raise Exception
+
+    x = x.unsqueeze(1).expand(n, m, d)
+    y = y.unsqueeze(0).expand(n, m, d)
+
+    return torch.pow(x - y, 2).sum(2)
 
 
 def predict(label, image_path):
-
     img0 = Image.open(image_path)
     input0 = image_transforms(img0)
     input0 = input0.cuda()
     input0 = input0.unsqueeze(dim=0)
 
-    output0 = net.forward_once(input0)
+    output0 = model(input0)
 
     rank_list = []
+    raise breakpoint()
 
     for key, value in feature_map.items():
         abs_path, output1 = value
 
-        euclidean_distance = pairwise_distance(output0, output1, keepdim=True)
+        euclidean_distance = euclidean_dist(output0, output1)
 
         rank_list.append((key, euclidean_distance.item(), abs_path))
 
     rank_list.sort(key=lambda x: x[1])
     rank_list_tot = np.array(rank_list)
+    print(rank_list_tot[0, 0:2])
     rank_list = np.array(rank_list[:top_qualified])
     rank_list_dict = {key: (value, i) for i, (key, value, _) in enumerate(rank_list)}
     rank_list_dict_tot = {key: (value, i) for i, (key, value, _) in enumerate(rank_list_tot)}
@@ -69,37 +112,19 @@ def predict(label, image_path):
 
 
 if __name__ == '__main__':
-    image_path_list = ['./queries/gg_0.jpg',
-                       './queries/hl2_0.jpg',
-                       './queries/isct_0.jpg',
-                       './queries/sdc_0.jpg',
-                       './queries/srl_0.jpg',
-                       './queries/xyz.jpg',
-                       './queries/rh_0.jpg',
-                       './queries/pog_0.jpg']
+    device = 'cuda' if is_available() else 'cpu'
 
-    labels = ['Giant-Germ-0-95178994',
-              'Harpie-Lady-2-0-27927359',
-              'Flying-Kamakiri-1-0-84834865',
-              'Chaos-Sorcerer-0-9596126',
-              'Swords-of-Revealing-Light-0-72302403',
-              'YZTank-Dragon-0-25119460',
-              'Harpie-Queen-0-75064463',
-              'Pot-of-Greed-0-55144522']
-
-    trained_model_path = "./models/res_epoch_60_012023.pth"
-    feature_map_path = "./feature_maps/feature_map_60epochs.pkl"
-
-    net = SiameseNetwork(None).cuda()
-    net.load_state_dict(load(trained_model_path)['model_state_dict'])
+    model = ResNet().to(device)
+    model.load_state_dict(load(Config.trained_model_path)['model_state_dict'])
+    model.eval()
 
     top_qualified = 300
 
     orb = cv2.ORB_create()
 
-    with open(feature_map_path, 'rb') as f:
+    with open(Config.feature_map_path, 'rb') as f:
         feature_map = pickle.load(f)
     f.close()
 
-    for index, image_path in enumerate(image_path_list):
-        predict(labels[index], image_path)
+    for index, image_path in enumerate(Config.image_path_list):
+        predict(Config.labels[index], image_path)

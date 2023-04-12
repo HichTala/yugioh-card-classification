@@ -8,8 +8,8 @@ from torch import load
 from torch.cuda import is_available
 from tqdm import tqdm
 
-from resnet import ResNet
-from transformations import final_data_transforms
+from src.resnet import ResNet
+from utils.transformations import final_data_transforms
 
 
 def parse_command_line():
@@ -30,15 +30,15 @@ def parse_command_line():
                         help="hidden layer dimensions (default: 64)")
     parser.add_argument('--output_dim', type=int, default=64,
                         help="model output dimensions")
-    parser.add_argument('model_path', default='./cardDatabaseFull/', type=str,
+    parser.add_argument('model_path', default='', type=str,
                         help="Path to trained model's checkpoint")
     parser.add_argument('--device', type=str, default=None,
                         help="device to use for training (default: cuda if available cpu otherwise)")
 
     # option args
-    parser.add_argument('--partition', action='store_true',
+    parser.add_argument('--partition', action='store_false',
                         help="create feature map partitions (default: False)")
-    parser.add_argument('--merge', action='store_true',
+    parser.add_argument('--merge', action='store_false',
                         help="merge feature map partitions (default: False)")
 
     return parser.parse_args()
@@ -51,7 +51,7 @@ def feature_map_partition(model, limit):
 
     count = 0
     limit_count = 0
-    with tqdm(total=10856, desc="Saving pickles:", colour='cyan') as pbar:
+    with tqdm(total=10856, desc="Saving pickles", colour='cyan') as pbar:
         for subdir, dirs, files in os.walk(args.data_path):
             for file in files:
                 if file.endswith(".png") or file.endswith(".jpg") or file.endswith(".jpeg"):
@@ -92,11 +92,11 @@ def feature_map_partition(model, limit):
 
 
 def merge_feature_map(partition_number):
-    feature_map_dir = './feature_maps/feature_maps_partition/'
+    feature_map_dir = '../feature_maps/feature_maps_partition/'
     feature_map = {}
 
-    with tqdm(total=partition_number, desc="Merging pickles:", colour='cyan') as pbar:
-        for i, files in enumerate(os.listdir(feature_map_dir)):
+    with tqdm(total=partition_number, desc="Merging pickles", colour='cyan') as pbar:
+        for files in os.listdir(feature_map_dir):
             abs_path = feature_map_dir + files
 
             with open(abs_path, "rb") as f:

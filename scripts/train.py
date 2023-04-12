@@ -2,20 +2,22 @@ import argparse
 import pickle
 
 import numpy as np
+from torch.optim import Adam
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.tensorboard import SummaryWriter
 
 import wandb
-from torch import optim, save, load, cat, arange
+from torch import save, load, cat
 from torch.cuda import is_available
 from torch.utils.data import DataLoader
 from torchvision import datasets
 from tqdm import tqdm
 
-from card_dataset import CardDataset
-from resnet import ResNet
-from prototypical_loss import prototypical_loss as loss_fn
-from sampler import EpisodicBatchSampler
-from transformations import train_data_transforms
+from src.card_dataset import CardDataset
+from src.resnet import ResNet
+from src.prototypical_loss import prototypical_loss as loss_fn
+from src.sampler import EpisodicBatchSampler
+from utils.transformations import train_data_transforms
 
 
 def parse_command_line():
@@ -28,8 +30,8 @@ def parse_command_line():
     # train args
     parser.add_argument('--epochs', default=300, type=int,
                         help="Number of epochs to train (default: 300)")
-    parser.add_argument('--lr', default=0.1, type=float,
-                        help="learning rate (default: 0.1)")
+    parser.add_argument('--lr', default=1e-5, type=float,
+                        help="learning rate (default: 0.00001)")
     parser.add_argument('--device', type=str, default=None,
                         help="device to use for training (default: cuda if available cpu otherwise)")
 
@@ -60,9 +62,19 @@ def data_initialization(training_dir, n_way, n_supports, n_queries):
     return DataLoader(train_dataset, batch_sampler=batch_sampler, num_workers=0)
 
 
-def train(model, optimizer, results_history, train_dataloader, epochs, n_way, n_supports, n_queries,
-          device):
-    writer = SummaryWriter('./models/runs')
+def train(
+        model,
+        optimizer,
+        scheduler,
+        results_history,
+        train_dataloader,
+        epochs,
+        n_way,
+        n_supports,
+        n_queries,
+        device
+):
+    writer = SummaryWriter('../models/runs')
     n_iter = 0
 
     print("Start training")
@@ -101,6 +113,7 @@ def train(model, optimizer, results_history, train_dataloader, epochs, n_way, n_
 
         loss.backward()
         optimizer.step()
+        scheduler.step(results['loss'])
 
         results_history['loss'].append(results['loss'])
         results_history['acc'].append(results['acc'])
@@ -144,7 +157,8 @@ def main(args):
         project="ygo-card-classification",
         config={
             "learning_rate": args.lr,
-            "architecture": 'Resnet'
+            "architecture": 'Resnet128',
+            "scheduler": 'loss'
         }
     )
 
@@ -157,7 +171,8 @@ def main(args):
 
     model = ResNet().to(device)
 
-    optimizer = optim.Adam(model.parameters(), lr=args.lr)
+    optimizer = Adam(model.parameters(), lr=args.lr)
+    scheduler = ReduceLROnPlateau(optimizer, mode='min')
     results_history = {'loss': [], 'acc': []}
 
     if args.resume is not None:
@@ -169,6 +184,7 @@ def main(args):
     train(
         model=model,
         optimizer=optimizer,
+        scheduler=scheduler,
         results_history=results_history,
         train_dataloader=train_dataloader,
         epochs=args.epochs,
