@@ -24,4 +24,4 @@ def calculate_HOG_points(orb, img0, img1):
 
 def art_cropper(img):
     width, height = img.size
-    return img.crop((int(0.2 * width), int(0.2 * height), int(0.8 * width), int(0.7 * height)))
+    return img.crop((int(0.115 * width), int(0.18 * height), int(0.89 * width), int(0.71 * height)))
