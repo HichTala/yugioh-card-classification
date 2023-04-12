@@ -5,7 +5,7 @@ from torchvision import transforms as T
 
 def train_data_transforms(img):
     # img = T.Resize(60, antialias=True)(img)
-    img = T.Resize((50, 50), antialias=True)(img)
+    img = T.Resize((325, 325), antialias=True)(img)
 
     gamma = normalvariate(mu=0.75, sigma=0.2)
     gamma = max(gamma, 0.15)

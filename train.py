@@ -36,7 +36,7 @@ def parse_command_line():
                         help="device to use for training (default: cuda if available cpu otherwise)")
 
     # hyperparameter args
-    parser.add_argument('--n_way', type=int, default=8,
+    parser.add_argument('--n_way', type=int, default=1,
                         help="Number of classes per partitions (default: 8")
     # parser.add_argument('--n_episodes', type=int, default=2,
     #                     help="Number of episodes (default: 2)")
@@ -96,6 +96,7 @@ def train(
             ], dim=0)
 
             outputs = model(inputs)
+            del supports, queries
 
             supports_path = './models/pickles/supports/pickle_{}'.format(i)
             with open(supports_path, "wb") as f:
@@ -159,7 +160,7 @@ def main(args):
         config={
             "learning_rate": args.lr,
             "architecture": 'Resnet128',
-            "scheduler": ''
+            "input_size": ''
         }
     )
 
