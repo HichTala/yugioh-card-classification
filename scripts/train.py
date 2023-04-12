@@ -17,7 +17,7 @@ from src.card_dataset import CardDataset
 from src.resnet import ResNet
 from src.prototypical_loss import prototypical_loss as loss_fn
 from src.sampler import EpisodicBatchSampler
-from utils.transformations import train_data_transforms
+from src.transformations import train_data_transforms
 
 
 def parse_command_line():
@@ -113,7 +113,8 @@ def train(
 
         loss.backward()
         optimizer.step()
-        scheduler.step(results['loss'])
+        if scheduler is not None:
+            scheduler.step(results['loss'])
 
         results_history['loss'].append(results['loss'])
         results_history['acc'].append(results['acc'])
@@ -158,7 +159,7 @@ def main(args):
         config={
             "learning_rate": args.lr,
             "architecture": 'Resnet128',
-            "scheduler": 'loss'
+            "scheduler": ''
         }
     )
 
@@ -172,7 +173,7 @@ def main(args):
     model = ResNet().to(device)
 
     optimizer = Adam(model.parameters(), lr=args.lr)
-    scheduler = ReduceLROnPlateau(optimizer, mode='min')
+    # scheduler = ReduceLROnPlateau(optimizer, mode='min')
     results_history = {'loss': [], 'acc': []}
 
     if args.resume is not None:
@@ -184,7 +185,7 @@ def main(args):
     train(
         model=model,
         optimizer=optimizer,
-        scheduler=scheduler,
+        scheduler=None,
         results_history=results_history,
         train_dataloader=train_dataloader,
         epochs=args.epochs,

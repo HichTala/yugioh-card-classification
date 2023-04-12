@@ -8,8 +8,8 @@ from torch import load
 from torch.cuda import is_available
 
 from src.resnet import ResNet
-from utils.tools import art_cropper, calculate_HOG_points, calculate_SIFT_score
-from utils.transformations import image_transforms, image_transforms_no_tensor
+from src.tools import art_cropper, calculate_HOG_points, calculate_SIFT_score
+from src.transformations import image_transforms, image_transforms_no_tensor
 
 
 class Config:

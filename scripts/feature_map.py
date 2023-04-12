@@ -9,7 +9,7 @@ from torch.cuda import is_available
 from tqdm import tqdm
 
 from src.resnet import ResNet
-from utils.transformations import final_data_transforms
+from src.transformations import final_data_transforms
 
 
 def parse_command_line():
