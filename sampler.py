@@ -3,7 +3,7 @@ import numpy as np
 
 class EpisodicBatchSampler(object):
     def __init__(self, n_classes, n_way):
-        self.n_classes = n_classes
+        self.n_classes = 4752
         self.n_way = n_way
 
     def __len__(self):

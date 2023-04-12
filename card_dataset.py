@@ -4,6 +4,8 @@ import torchvision.transforms as T
 
 from PIL import Image
 
+from tools import art_cropper
+
 
 class CardDataset(Dataset):
 
@@ -17,6 +19,7 @@ class CardDataset(Dataset):
         img_tuple = self.image_folder_dataset.imgs[index]
 
         img = Image.open(img_tuple[0])
+        img = art_cropper(img)
         # label = img_tuple[1]
 
         img = T.ToTensor()(img).unsqueeze(0)
