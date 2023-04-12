@@ -92,7 +92,7 @@ def feature_map_partition(model, limit):
 
 
 def merge_feature_map(partition_number):
-    feature_map_dir = '../feature_maps/feature_maps_partition/'
+    feature_map_dir = 'feature_maps/feature_maps_partition/'
     feature_map = {}
 
     with tqdm(total=partition_number, desc="Merging pickles", colour='cyan') as pbar:

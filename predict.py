@@ -32,7 +32,7 @@ class Config:
               'Pot-of-Greed-0-55144522']
 
     trained_model_path = "./models/lr=0.00001/proto_epoch_122.pth"
-    feature_map_path = "../feature_maps/lr=0.00001/feature_map_122eps.pkl"
+    feature_map_path = "feature_maps/lr=0.00001/feature_map_122eps.pkl"
 
 
 def euclidean_dist(x, y):
@@ -62,7 +62,6 @@ def predict(label, image_path):
     output0 = model(input0)
 
     rank_list = []
-    raise breakpoint()
 
     for key, value in feature_map.items():
         abs_path, output1 = value
