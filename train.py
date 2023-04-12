@@ -117,8 +117,8 @@ def train(model, optimizer, results_history, train_dataloader, epochs, n_way, n_
         })
 
         print("\033[1m\033[96mloss\033[0m: {}, \033[1m\033[96macc\033[0m: {}".format(
-            np.mean(results_history['loss']),
-            np.mean(results_history['acc'])
+            results['loss'],
+            results['acc']
         ))
 
         save_path = './models/checkpoints/proto_epoch_{}.pth'.format(epoch)
