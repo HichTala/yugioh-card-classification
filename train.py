@@ -28,7 +28,7 @@ def parse_command_line():
                         help="Path to training dataset's directory")
 
     # train args
-    parser.add_argument('--epochs', default=300, type=int,
+    parser.add_argument('--epochs', default=900, type=int,
                         help="Number of epochs to train (default: 300)")
     parser.add_argument('--lr', default=1e-5, type=float,
                         help="learning rate (default: 0.00001)")
@@ -36,17 +36,17 @@ def parse_command_line():
                         help="device to use for training (default: cuda if available cpu otherwise)")
 
     # hyperparameter args
-    parser.add_argument('--n_way', type=int, default=10,
-                        help="Number of classes per episodes (default: 2048")
-    parser.add_argument('--n_episodes', type=int, default=73,
+    parser.add_argument('--n_way', type=int, default=128,
+                        help="Number of classes per episodes (default: 128")
+    parser.add_argument('--n_episodes', type=int, default=85,
                         help="Number of episodes (default: 5)")
     parser.add_argument('--n_partition', type=int, default=256,
-                        help="Number of classes per partitions (default: 1")
+                        help="Number of classes per partitions (default: 256")
     parser.add_argument('--n_supports', type=int, default=5,
                         help="Number of support examples per classes (default: 5)")
     parser.add_argument('--n_queries', type=int, default=5,
                         help="Number of query examples per classes (default: 5)")
-    parser.add_argument('--n_classes', type=int, default=256,
+    parser.add_argument('--n_classes', type=int, default=4752,
                         help="Number of classes in the dataset(default: 4752)")
 
     # resume training
@@ -73,7 +73,7 @@ def proto_preprocess(model, train_dataset, n_partition, n_supports, device):
     preprocess_loader = DataLoader(train_dataset, batch_size=n_partition)
     prototypes = []
 
-    for i, batch in enumerate(preprocess_loader):
+    for i, batch in enumerate(tqdm(preprocess_loader, desc="\033[1mPreprocessing\033[0m", colour='green')):
         supports = batch['supports'].to(device)
 
         inputs = cat([
