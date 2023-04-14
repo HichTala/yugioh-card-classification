@@ -20,7 +20,7 @@ class CardDataset(Dataset):
 
         img = Image.open(img_tuple[0])
         img = art_cropper(img)
-        # label = img_tuple[1]
+        label = img_tuple[1]
 
         img = T.ToTensor()(img).unsqueeze(0)
 
@@ -30,7 +30,7 @@ class CardDataset(Dataset):
         supports = torch.cat(supports, dim=0)
         queries = torch.cat(queries, dim=0)
 
-        return {'supports': supports, 'queries': queries}  # {'label': label, 'supports': supports, 'queries': queries}
+        return {'label': label, 'supports': supports, 'queries': queries}  # {'supports': supports, 'queries': queries}
 
     def __len__(self):
         return len(self.image_folder_dataset.imgs)
