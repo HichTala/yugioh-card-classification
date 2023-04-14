@@ -46,8 +46,8 @@ def parse_command_line():
                         help="Number of support examples per classes (default: 5)")
     parser.add_argument('--n_queries', type=int, default=5,
                         help="Number of query examples per classes (default: 5)")
-    parser.add_argument('--n_classes', type=int, default=4752,
-                        help="Number of classes in the dataset(default: 4752)")
+    parser.add_argument('--n_classes', type=int, default=4864,
+                        help="Number of classes in the dataset(default: 4864)")
 
     # resume training
     parser.add_argument('--resume', default=None, type=str,
@@ -76,6 +76,7 @@ def proto_preprocess(model, train_dataset, n_partition, n_supports, device):
     for i, batch in enumerate(tqdm(preprocess_loader, desc="\033[1mPreprocessing\033[0m", colour='green')):
         supports = batch['supports'].to(device)
 
+        # TODO: Find a way to avoid error when n_classes isn't a multiple of n_partition
         inputs = cat([
             supports.view(n_partition * n_supports, *supports.size()[2:]),
         ], dim=0)
