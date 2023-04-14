@@ -23,49 +23,52 @@ def euclidean_dist(x, y):
     return torch.pow(x - y, 2).sum(2)
 
 
-def dist_computation(n_classes, n_supports):
-    dists = []
+def prototype_update(supports, labels, prototypes, n_way, n_supports):
+    prototype_dir = './outputs/pickles/prototype/pickle_{}'
 
-    supports_dir = './models/pickles/supports/pickle_{}'
-    queries_dir = './models/pickles/queries/pickle_{}'
+    dim = supports.size(-1)
+    supports = supports.view(n_way, n_supports, dim)
+    for i, label in enumerate(labels):
+        prototypes[label].data = supports[i].mean(0)
+    return prototypes
+
+
+def log_computation(n_way, n_queries):
+    dists_dir = './outputs/pickles/distances/pickle_{}'
+    log_p_y = []
 
     i = 0
-    while True:
-        supports_path = supports_dir.format(i)
-        queries_path = queries_dir.format(i)
+    dists_path = dists_dir.format(i)
+    while os.path.exists(dists_path):
+        with open(dists_path, "rb") as f:
+            dists = pickle.load(f)
+        f.close()
+        os.remove(dists_path)
 
+        log_p_y.append(F.log_softmax(-dists, dim=1).view(n_way, n_queries, -1))
         i += 1
-        if os.path.exists(supports_path) and os.path.exists(queries_path):
-            with open(supports_path, "rb") as f:
-                supports = pickle.load(f)
-            f.close()
+        dists_path = dists_dir.format(i)
 
-            dim = supports.size(-1)
-            prototype = supports.view(n_classes, n_supports, dim).mean(1)
-            del supports
-
-            with open(queries_path, "rb") as f:
-                queries = pickle.load(f)
-            f.close()
-
-            dists.append(euclidean_dist(queries, prototype))
-            del queries
-        else:
-            return torch.cat(dists)
+    return torch.cat(log_p_y, dim=2)
 
 
-def prototypical_loss(n_classes, n_supports, n_queries):
-    dists = dist_computation(n_classes, n_supports)
+def prototypical_loss(outputs, labels, prototypes, n_supports, n_queries, n_way, device):
+    prototypes = prototype_update(
+        supports=outputs[:n_way * n_supports],
+        labels=labels,
+        prototypes=prototypes,
+        n_way=n_way,
+        n_supports=n_supports,
+    )
 
-    log_p_y = F.log_softmax(-dists, dim=1).view(n_classes, n_queries, -1)
-    label = torch.arange(0, n_classes).view(n_classes, 1, 1).expand(n_classes, n_queries, 1).long().cuda()
+    dist = euclidean_dist(outputs[n_way * n_supports:], prototypes)
+    log_p_y = F.log_softmax(-dist, dim=1).view(n_way, n_queries, -1)
 
-    loss_val = -log_p_y.gather(2, label).squeeze().view(-1).mean()
+    labels = labels.view(n_way, 1, 1).expand(n_way, n_queries, 1).long().to(device)
+    loss_val = -log_p_y.gather(2, labels).squeeze().view(-1).mean()
 
     _, y_hat = log_p_y.max(2)
-    acc_val = torch.eq(y_hat, label.squeeze()).float().mean()
-
-    del dists, label
+    acc_val = torch.eq(y_hat, labels.squeeze()).float().mean()
 
     return loss_val, {
         'loss': loss_val.item(),
