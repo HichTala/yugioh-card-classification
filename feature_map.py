@@ -32,9 +32,9 @@ def parse_command_line():
 
     # option args
     parser.add_argument('--partition', action='store_false',
-                        help="create feature map partitions (default: False)")
+                        help="create feature map partitions (default: True)")
     parser.add_argument('--merge', action='store_false',
-                        help="merge feature map partitions (default: False)")
+                        help="merge feature map partitions (default: True)")
 
     return parser.parse_args()
 
