@@ -40,10 +40,10 @@ def final_data_transforms(img):
 
 
 def image_transforms(img):
-    img = T.Resize((98, 65), antialias=True)(img)
+    img = T.Resize((50, 50), antialias=True)(img)
 
     img = T.ToTensor()(img)
-    # img = T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])(img)
+    img = T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])(img)
 
     return img
 
