@@ -12,7 +12,6 @@ from src.resnet import ResNet
 from src.transformations import final_data_transforms
 
 
-# TODO: change name from feature map to prototypes
 def parse_command_line():
     parser = argparse.ArgumentParser('Yu-Gi-Oh! Card classification feature map parser', add_help=True)
 
@@ -39,7 +38,7 @@ def parse_command_line():
     return parser.parse_args()
 
 
-def feature_map_partition(model, limit, dataset_size):
+def prototype_partition(model, limit, dataset_size):
     device = 'cuda' if is_available() else 'cpu'
 
     feature_map = {}
@@ -67,7 +66,7 @@ def feature_map_partition(model, limit, dataset_size):
                     feature_map[dir_name] = (abs_file_path, outputs)
 
                     if count % limit == 0:
-                        save_path = './feature_maps/feature_maps_partition/feature_map_{}.pkl'.format(limit_count)
+                        save_path = './prototypes/prototypes_partition/prototype_{}.pkl'.format(limit_count)
 
                         with open(save_path, "wb") as f:
                             pickle.dump(feature_map, f)
@@ -76,7 +75,7 @@ def feature_map_partition(model, limit, dataset_size):
                         feature_map = {}
                         limit_count += 1
 
-    save_path = './feature_maps/feature_maps_partition/feature_map_{}.pkl'.format(limit_count + 1)
+    save_path = './prototypes/prototypes_partition/prototype_{}.pkl'.format(limit_count + 1)
 
     with open(save_path, "wb") as f:
         pickle.dump(feature_map, f)
@@ -86,8 +85,8 @@ def feature_map_partition(model, limit, dataset_size):
     return limit_count
 
 
-def merge_feature_map(partition_number):
-    feature_map_dir = 'feature_maps/feature_maps_partition/'
+def merge_prototype(partition_number):
+    feature_map_dir = 'prototypes/prototypes_partition/'
     feature_map = {}
 
     with tqdm(total=partition_number, desc="Merging pickles", colour='cyan') as pbar:
@@ -101,7 +100,7 @@ def merge_feature_map(partition_number):
             feature_map.update(tmp)
             del tmp
 
-            savePath = './feature_maps/feature_map.pkl'
+            savePath = './prototypes/prototype.pkl'
             with open(savePath, "wb") as f:
                 pickle.dump(feature_map, f)
             f.close()
@@ -121,9 +120,9 @@ def main(args):
     partition_number = np.ceil(args.dataset_size / args.limit)
 
     if args.partition:
-        partition_number = feature_map_partition(model=model, limit=args.limit, dataset_size=args.dataset_size)
+        partition_number = prototype_partition(model=model, limit=args.limit, dataset_size=args.dataset_size)
     if args.merge:
-        merge_feature_map(partition_number=partition_number)
+        merge_prototype(partition_number=partition_number)
 
 
 if __name__ == '__main__':
