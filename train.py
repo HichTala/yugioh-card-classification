@@ -28,7 +28,7 @@ def parse_command_line():
                         help="Path to training dataset's directory")
 
     # train args
-    parser.add_argument('--epochs', default=900, type=int,
+    parser.add_argument('--epochs', default=300, type=int,
                         help="Number of epochs to train (default: 300)")
     parser.add_argument('--lr', default=1e-5, type=float,
                         help="learning rate (default: 0.00001)")
@@ -93,7 +93,8 @@ def train(
         results_history,
         train_dataloader,
         prototypes,
-        epochs,
+        start_epochs,
+        end_epochs,
         n_supports,
         n_queries,
         n_way,
@@ -104,7 +105,7 @@ def train(
 
     print("Start training")
     model.train()
-    for epoch in range(epochs):
+    for epoch in range(start_epochs, end_epochs):
         for batch in tqdm(train_dataloader, desc="\033[1mEpoch {:d}\033[0m train".format(epoch), colour='cyan'):
             optimizer.zero_grad()
 
@@ -160,7 +161,9 @@ def train(
         save({
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
-            'results': results_history
+            'results': results_history,
+            'prototypes': prototypes,
+            'epochs': epoch
         }, save_path)
 
     wandb.finish()
@@ -180,7 +183,7 @@ def main(args):
         config={
             "learning_rate": args.lr,
             "architecture": 'Resnet128',
-            "input_size": ''
+            "n_way": args.n_way
         }
     )
 
@@ -203,12 +206,7 @@ def main(args):
 
     optimizer = Adam(model.parameters(), lr=args.lr)
     results_history = {'loss': [], 'acc': []}
-
-    if args.resume is not None:
-        state_dict = load(args.resume)
-        model.load_state_dict(state_dict['model_state_dict'])
-        optimizer.load_state_dict(state_dict['optimizer_state_dict'])
-        results_history = state_dict['results']
+    epochs = -1
 
     with no_grad():
         prototypes = proto_preprocess(
@@ -219,13 +217,21 @@ def main(args):
             device=device
         )
 
+    if args.resume is not None:
+        state_dict = load(args.resume)
+        model.load_state_dict(state_dict['model_state_dict'])
+        optimizer.load_state_dict(state_dict['optimizer_state_dict'])
+        epochs = 82  # state_dict['epochs']
+        # prototypes = state_dict['prototypes']
+
     train(
         model=model,
         optimizer=optimizer,
         results_history=results_history,
         train_dataloader=train_dataloader,
         prototypes=prototypes,
-        epochs=args.epochs,
+        start_epochs=epochs + 1,
+        end_epochs=args.epochs,
         n_supports=args.n_supports,
         n_queries=args.n_queries,
         n_way=args.n_way,
