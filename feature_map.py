@@ -20,16 +20,10 @@ def parse_command_line():
                         help="Path to training dataset's directory")
     parser.add_argument('--limit', default=20, type=int,
                         help="Number of cards per partitions")
-    parser.add_argument('--dataset_size', default=10856, type=int,
-                        help="Number of cards in total in the dataset (default: 10856)")
+    parser.add_argument('--dataset_size', default=4864, type=int,
+                        help="Number of cards in total in the dataset (default: 4864)")
 
     # model args
-    parser.add_argument('--input_dim', type=int, default=3,
-                        help="input image number of channel (default: 3)")
-    parser.add_argument('--hidden_dim', type=int, default=64,
-                        help="hidden layer dimensions (default: 64)")
-    parser.add_argument('--output_dim', type=int, default=64,
-                        help="model output dimensions")
     parser.add_argument('model_path', default='', type=str,
                         help="Path to trained model's checkpoint")
     parser.add_argument('--device', type=str, default=None,
@@ -44,14 +38,14 @@ def parse_command_line():
     return parser.parse_args()
 
 
-def feature_map_partition(model, limit):
+def feature_map_partition(model, limit, dataset_size):
     device = 'cuda' if is_available() else 'cpu'
 
     feature_map = {}
 
     count = 0
     limit_count = 0
-    with tqdm(total=10856, desc="Saving pickles", colour='cyan') as pbar:
+    with tqdm(total=dataset_size, desc="Saving pickles", colour='cyan') as pbar:
         for subdir, dirs, files in os.walk(args.data_path):
             for file in files:
                 if file.endswith(".png") or file.endswith(".jpg") or file.endswith(".jpeg"):
@@ -126,7 +120,7 @@ def main(args):
     partition_number = np.ceil(args.dataset_size/args.limit)
 
     if args.partition:
-        partition_number = feature_map_partition(model=model, limit=args.limit)
+        partition_number = feature_map_partition(model=model, limit=args.limit, dataset_size=args.dataset_size)
     if args.merge:
         merge_feature_map(partition_number=partition_number)
 

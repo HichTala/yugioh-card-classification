@@ -26,11 +26,10 @@ def train_data_transforms(img):
 
 
 def final_data_transforms(img):
-    # img = T.Resize(50, antialias=True)(img)
-    img = T.Resize((95, 63), antialias=True)(img)
+    img = T.Resize((50, 50), antialias=True)(img)
 
-    img = T.functional.adjust_gamma(img, gamma=1, gain=1)
-    img = T.functional.adjust_saturation(img, saturation_factor=0.7)
+    img = T.functional.adjust_gamma(img, gamma=0.75, gain=1.15)
+    img = T.functional.adjust_saturation(img, saturation_factor=0.8)
     # img = T.GaussianBlur(kernel_size=(5, 9), sigma=0.5)(img)
     img = T.functional.adjust_hue(img, hue_factor=0)
 
