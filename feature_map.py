@@ -12,6 +12,7 @@ from src.resnet import ResNet
 from src.transformations import final_data_transforms
 
 
+# TODO: change name from feature map to prototypes
 def parse_command_line():
     parser = argparse.ArgumentParser('Yu-Gi-Oh! Card classification feature map parser', add_help=True)
 
@@ -75,7 +76,7 @@ def feature_map_partition(model, limit, dataset_size):
                         feature_map = {}
                         limit_count += 1
 
-    save_path = './feature_maps/feature_maps_partition/feature_map_{}.pkl'.format(limit_count+1)
+    save_path = './feature_maps/feature_maps_partition/feature_map_{}.pkl'.format(limit_count + 1)
 
     with open(save_path, "wb") as f:
         pickle.dump(feature_map, f)
@@ -117,7 +118,7 @@ def main(args):
     model = ResNet().to(device)
     model.load_state_dict(load(args.model_path)['model_state_dict'])
 
-    partition_number = np.ceil(args.dataset_size/args.limit)
+    partition_number = np.ceil(args.dataset_size / args.limit)
 
     if args.partition:
         partition_number = feature_map_partition(model=model, limit=args.limit, dataset_size=args.dataset_size)
