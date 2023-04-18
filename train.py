@@ -1,9 +1,7 @@
 import argparse
-import pickle
 
 import numpy as np
 from torch.optim import Adam
-from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.tensorboard import SummaryWriter
 
 import wandb
@@ -52,6 +50,8 @@ def parse_command_line():
     # resume training
     parser.add_argument('--resume', default=None, type=str,
                         help="Path to the checkpoint to resume from (default: None)")
+    parser.add_argument('--no_sampler', action='store_true',
+                        help="Do not use a sampler for training (default: False)")
 
     return parser.parse_args()
 
@@ -194,13 +194,15 @@ def main(args):
         n_queries=args.n_queries,
     )
 
-    batch_sampler = EpisodicBatchSampler(
-        n_classes=args.n_classes,
-        n_episodes=args.n_episodes,
-        n_way=args.n_way
-    )
-
-    train_dataloader = DataLoader(train_dataset, batch_sampler=batch_sampler, num_workers=0)
+    if args.no_sampler:
+        train_dataloader = DataLoader(train_dataset, batch_size=args.n_way, num_workers=0)
+    else:
+        batch_sampler = EpisodicBatchSampler(
+            n_classes=args.n_classes,
+            n_episodes=args.n_episodes,
+            n_way=args.n_way
+        )
+        train_dataloader = DataLoader(train_dataset, batch_sampler=batch_sampler, num_workers=0)
 
     model = ResNet().to(device)
 
@@ -221,8 +223,8 @@ def main(args):
         state_dict = load(args.resume)
         model.load_state_dict(state_dict['model_state_dict'])
         optimizer.load_state_dict(state_dict['optimizer_state_dict'])
-        epochs = 82  # state_dict['epochs']
-        # prototypes = state_dict['prototypes']
+        epochs = state_dict['epochs']
+        prototypes = state_dict['prototypes']
 
     train(
         model=model,
