@@ -35,7 +35,7 @@ def parse_command_line():
 
     # hyperparameter args
     parser.add_argument('--n_way', type=int, default=32,
-                        help="Number of classes per episodes (default: 32")
+                        help="Number of classes per episodes/batch (default: 32")
     parser.add_argument('--n_episodes', type=int, default=341,
                         help="Number of episodes (default: 341)")
     parser.add_argument('--n_partition', type=int, default=128,
@@ -45,7 +45,7 @@ def parse_command_line():
     parser.add_argument('--n_queries', type=int, default=5,
                         help="Number of query examples per classes (default: 5)")
     parser.add_argument('--n_classes', type=int, default=4864,
-                        help="Number of classes in the dataset(default: 4864)")
+                        help="Number of classes in the dataset (default: 4864)")
 
     # resume training
     parser.add_argument('--resume', default=None, type=str,
@@ -76,9 +76,8 @@ def proto_preprocess(model, train_dataset, n_partition, n_supports, device):
     for i, batch in enumerate(tqdm(preprocess_loader, desc="\033[1mPreprocessing\033[0m", colour='green')):
         supports = batch['supports'].to(device)
 
-        # TODO: Find a way to avoid error when n_classes isn't a multiple of n_partition
         inputs = cat([
-            supports.view(n_partition * n_supports, *supports.size()[2:]),
+            supports.view(supports.size()[0] * n_supports, *supports.size()[2:]),
         ], dim=0)
 
         outputs = model(inputs)
