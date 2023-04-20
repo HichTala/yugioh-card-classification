@@ -210,21 +210,21 @@ def main(args):
     results_history = {'loss': [], 'acc': []}
     epochs = -1
 
-    with no_grad():
-        prototypes = proto_preprocess(
-            model=model,
-            train_dataset=train_dataset,
-            n_partition=args.n_partition,
-            n_supports=args.n_supports,
-            device=device
-        )
-
     if args.resume is not None:
         state_dict = load(args.resume)
         model.load_state_dict(state_dict['model_state_dict'])
         optimizer.load_state_dict(state_dict['optimizer_state_dict'])
         epochs = state_dict['epochs']
-        prototypes = state_dict['prototypes']
+        prototypes = state_dict['prototypes'].to(device)
+    else:
+        with no_grad():
+            prototypes = proto_preprocess(
+                model=model,
+                train_dataset=train_dataset,
+                n_partition=args.n_partition,
+                n_supports=args.n_supports,
+                device=device
+            )
 
     train(
         model=model,
