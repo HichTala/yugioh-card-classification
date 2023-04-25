@@ -1,6 +1,3 @@
-import os
-import pickle
-
 import torch
 from torch.nn import functional as F
 
@@ -31,25 +28,6 @@ def prototype_update(supports, labels, prototypes, n_way, n_supports):
     for i, label in enumerate(labels):
         prototypes[label].data = supports[i].mean(0)
     return prototypes
-
-
-def log_computation(n_way, n_queries):
-    dists_dir = './outputs/pickles/distances/pickle_{}'
-    log_p_y = []
-
-    i = 0
-    dists_path = dists_dir.format(i)
-    while os.path.exists(dists_path):
-        with open(dists_path, "rb") as f:
-            dists = pickle.load(f)
-        f.close()
-        os.remove(dists_path)
-
-        log_p_y.append(F.log_softmax(-dists, dim=1).view(n_way, n_queries, -1))
-        i += 1
-        dists_path = dists_dir.format(i)
-
-    return torch.cat(log_p_y, dim=2)
 
 
 def prototypical_loss(outputs, labels, prototypes, n_supports, n_queries, n_way, device):
