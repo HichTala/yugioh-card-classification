@@ -74,7 +74,7 @@ def test(
         outputs = model(inputs)
 
         results += labels.item() == prediction(output=outputs, prototypes=prototypes, n_queries=n_queries, k=top_k)
-    print("\033[1m\033[96maccuracy\033[0m: {}".format(results / n_classes))
+    print("\033[1m{}\033[0m correctly recognized cards - \033[1m\033[96maccuracy\033[0m: {.2f}%".format(results, (results / n_classes) * 100))
 
 
 def main(args):
