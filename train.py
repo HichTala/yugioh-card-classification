@@ -56,8 +56,8 @@ def parse_command_line():
     return parser.parse_args()
 
 
-def data_initialization(training_dir, n_classes, n_supports, n_queries):
-    folder_dataset = datasets.ImageFolder(root=training_dir)
+def data_initialization(directory, n_classes, n_supports, n_queries):
+    folder_dataset = datasets.ImageFolder(root=directory)
     train_dataset = CardDataset(
         image_folder_dataset=folder_dataset,
         n_supports=n_supports,
@@ -187,7 +187,7 @@ def main(args):
     )
 
     train_dataset = data_initialization(
-        training_dir=args.data_path,
+        directory=args.data_path,
         n_classes=args.n_classes,
         n_supports=args.n_supports,
         n_queries=args.n_queries,
