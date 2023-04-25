@@ -60,6 +60,7 @@ def test(
         device
 ):
     results = 0
+    bad_recognition = []
 
     print("Start testing")
     model.train()
@@ -73,8 +74,18 @@ def test(
 
         outputs = model(inputs)
 
-        results += labels.item() == prediction(output=outputs, prototypes=prototypes, n_queries=n_queries, k=top_k)
-    print("\033[1m{}\033[0m correctly recognized cards - \033[1m\033[96maccuracy\033[0m: {.2f}%".format(results, (results / n_classes) * 100))
+        result = labels.item() == prediction(output=outputs, prototypes=prototypes, n_queries=n_queries, k=top_k)
+        results += result
+
+        if result == 0:
+            bad_recognition.append(labels.item())
+
+    print("\033[1m{0}\033[0m correctly recognized cards - \033[1m\033[96maccuracy\033[0m: {1:.2f}%".format(
+        results,
+        (results / n_classes) * 100
+    ))
+    print("Bad recognition:")
+    print(bad_recognition)
 
 
 def main(args):
