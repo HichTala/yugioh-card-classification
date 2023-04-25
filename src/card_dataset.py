@@ -27,8 +27,10 @@ class CardDataset(Dataset):
         supports = [self.transform(img) for _ in range(self.n_supports)]
         queries = [self.transform(img) for _ in range(self.n_queries)]
 
-        supports = torch.cat(supports, dim=0)
-        queries = torch.cat(queries, dim=0)
+        if supports:
+            supports = torch.cat(supports, dim=0)
+        if queries:
+            queries = torch.cat(queries, dim=0)
 
         return {'label': label, 'supports': supports, 'queries': queries}  # {'supports': supports, 'queries': queries}
 
