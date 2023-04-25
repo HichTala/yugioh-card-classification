@@ -5,7 +5,7 @@ from torchvision import transforms as T
 
 def train_data_transforms(img):
     # img = T.Resize(60, antialias=True)(img)
-    img = T.Resize((50, 50), antialias=True)(img)
+    img = T.Resize((200, 200), antialias=True)(img)
 
     gamma = normalvariate(mu=0.75, sigma=0.2)
     gamma = max(gamma, 0.15)
@@ -26,7 +26,7 @@ def train_data_transforms(img):
 
 
 def final_data_transforms(img):
-    img = T.Resize((50, 50), antialias=True)(img)
+    img = T.Resize((200, 200), antialias=True)(img)
 
     img = T.functional.adjust_gamma(img, gamma=0.75, gain=1.15)
     img = T.functional.adjust_saturation(img, saturation_factor=0.8)
@@ -40,7 +40,7 @@ def final_data_transforms(img):
 
 
 def image_transforms(img):
-    img = T.Resize((50, 50), antialias=True)(img)
+    img = T.Resize((200, 200), antialias=True)(img)
 
     img = T.ToTensor()(img)
     img = T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])(img)
@@ -49,6 +49,6 @@ def image_transforms(img):
 
 
 def image_transforms_no_tensor(img):
-    img = T.Resize((98, 65), antialias=True)(img)
+    img = T.Resize((200, 200), antialias=True)(img)
 
     return img
