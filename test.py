@@ -20,6 +20,12 @@ def parse_command_line():
     parser.add_argument('--data_path', default='./cardDatabaseFull/', type=str,
                         help="Path to training dataset's directory")
 
+    parser.add_argument('--image_path', type=str, default=None,
+                        help="Path to the image on which to make the inference "
+                             "(default: Inference on all images listed in queries.py)")
+    parser.add_argument('--labels', type=str, default=None,
+                        help="Label of the given inference image (default: None)")
+
     parser.add_argument('--device', type=str, default=None,
                         help="device to use for training (default: cuda if available cpu otherwise)")
 
@@ -30,6 +36,7 @@ def parse_command_line():
 
     parser.add_argument('--top_k', type=int, default=10,
                         help="k best prediction to take into account (default:10)")
+
 
     return parser.parse_args()
 
