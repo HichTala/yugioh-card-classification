@@ -37,7 +37,6 @@ def parse_command_line():
     parser.add_argument('--top_k', type=int, default=10,
                         help="k best prediction to take into account (default:10)")
 
-
     return parser.parse_args()
 
 

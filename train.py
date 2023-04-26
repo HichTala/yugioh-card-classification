@@ -1,19 +1,18 @@
 import argparse
 
 import numpy as np
-from torch.optim import Adam
-from torch.utils.tensorboard import SummaryWriter
-
-import wandb
 from torch import save, load, cat, no_grad
 from torch.cuda import is_available
+from torch.optim import Adam
 from torch.utils.data import DataLoader, Subset
+from torch.utils.tensorboard import SummaryWriter
 from torchvision import datasets
 from tqdm import tqdm
 
+import wandb
 from src.card_dataset import CardDataset
-from src.resnet import ResNet
 from src.prototypical_loss import prototypical_loss as loss_fn
+from src.resnet import ResNet
 from src.sampler import EpisodicBatchSampler
 from src.transformations import train_data_transforms
 

@@ -1,8 +1,7 @@
-import torch
-from torch.utils.data import Dataset
 import torchvision.transforms as T
-
 from PIL import Image
+from torch import cat
+from torch.utils.data import Dataset
 
 from src.tools import art_cropper
 
@@ -28,9 +27,9 @@ class CardDataset(Dataset):
         queries = [self.transform(img) for _ in range(self.n_queries)]
 
         if supports:
-            supports = torch.cat(supports, dim=0)
+            supports = cat(supports, dim=0)
         if queries:
-            queries = torch.cat(queries, dim=0)
+            queries = cat(queries, dim=0)
 
         return {'label': label, 'supports': supports, 'queries': queries}  # {'supports': supports, 'queries': queries}
 

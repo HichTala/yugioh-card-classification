@@ -1,4 +1,4 @@
-import torch
+from torch import pow, eq
 from torch.nn import functional as F
 
 
@@ -17,7 +17,7 @@ def euclidean_dist(x, y):
     x = x.unsqueeze(1).expand(n, m, d)
     y = y.unsqueeze(0).expand(n, m, d)
 
-    return torch.pow(x - y, 2).sum(2)
+    return pow(x - y, 2).sum(2)
 
 
 def prototype_update(supports, labels, prototypes, n_way, n_supports):
@@ -46,7 +46,7 @@ def prototypical_loss(outputs, labels, prototypes, n_supports, n_queries, n_way,
     loss_val = -log_p_y.gather(2, labels).squeeze().view(-1).mean()
 
     _, y_hat = log_p_y.max(2)
-    acc_val = torch.eq(y_hat, labels.squeeze()).float().mean()
+    acc_val = eq(y_hat, labels.squeeze()).float().mean()
 
     return loss_val, {
         'loss': loss_val.item(),
