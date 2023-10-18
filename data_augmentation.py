@@ -38,15 +38,15 @@ def main(args):
                     img = Image.open(abs_file_path)
 
                     img = art_cropper(img)
-                    img = image_transforms_no_tensor(img)
-                    img.save(abs_file_path)
+                    new_img = image_transforms_no_tensor(img)
+                    new_img.save(abs_file_path)
 
                     for k in range(args.iter):
                         split = file.split('.')
-                        file = split[0] + f"_{k}." + split[1]
+                        new_file = split[0] + f"_{k}." + split[1]
 
-                        img = train_data_transforms(img)
-                        img.save(os.path.join(subdir, file))
+                        new_img = train_data_transforms(img)
+                        new_img.save(os.path.join(subdir, new_file))
 
 
 if __name__ == '__main__':

@@ -20,7 +20,7 @@ def train_data_transforms(img):
     img = T.functional.adjust_saturation(img, saturation_factor=sat_factor)
     # img = T.GaussianBlur(kernel_size=5, sigma=1)(img)
     img = T.functional.adjust_hue(img, hue_factor=hue_factor)
-    img = T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])(img)
+    # img = T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])(img)
 
     return img
 
