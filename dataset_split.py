@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 
 def parse_command_line():
-    parser = argparse.ArgumentParser('Yu-Gi-Oh! Dataset splitter testing parser', add_help=True)
+    parser = argparse.ArgumentParser('Yu-Gi-Oh! Dataset splitter', add_help=True)
 
     # data args
     parser.add_argument('--data_path', default='./cardDatabaseFull/', type=str,
