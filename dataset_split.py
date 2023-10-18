@@ -57,13 +57,10 @@ def main(args):
 
     card_types = ['spell', 'trap', 'monster', 'normal_monster', 'link', 'xyz', 'syncro', 'fusion', 'pendulum', 'ritual']
 
-    count = 0
-
     with tqdm(total=dataset_size, desc="Formatting Dataset", colour='cyan') as pbar:
         for subdir, dirs, files in os.walk(args.data_path):
             for file in files:
                 if file.endswith(".png") or file.endswith(".jpg") or file.endswith(".jpeg"):
-                    count += 1
                     pbar.update(1)
                     abs_file_path = os.path.join(subdir, file)
 
