@@ -4,7 +4,8 @@ from torchvision import transforms
 
 
 def train_data_transforms(img):
-    img = transforms.Resize(60, antialias=True)(img)
+    img = transforms.RandomResizedCrop(60, antialias=True)(img)
+    img = transforms.RandomRotation(degrees=40)(img)
     img = transforms.Resize((224, 224), antialias=True)(img)
 
     gamma = normalvariate(mu=1.25, sigma=0.4)
