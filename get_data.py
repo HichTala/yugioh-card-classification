@@ -45,7 +45,7 @@ def main(args):
                 path = os.path.join(paths[card["frameType"]], name)
                 if not os.path.exists(path):
                     os.makedirs(path)
-                    download_file(images["image_url_cropped"], os.path.join(path, str(images["id"])) + ".png")
+                    download_file(images["image_url_small"], os.path.join(path, str(images["id"])) + ".png")
 
 
 if __name__ == '__main__':
