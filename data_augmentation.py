@@ -37,7 +37,7 @@ def main(args):
 
                     img = Image.open(abs_file_path)
 
-                    # img = art_cropper(img)
+                    img = art_cropper(img)
                     new_img = image_transforms_no_tensor(img)
                     new_img.save(abs_file_path)
 
