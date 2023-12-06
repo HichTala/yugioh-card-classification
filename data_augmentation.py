@@ -28,7 +28,7 @@ def parse_command_line():
 def main(args):
     dataset_size = args.dataset_size
 
-    with tqdm(total=dataset_size, desc="Formatting Dataset", colour='cyan') as pbar:
+    with tqdm(total=dataset_size, desc="Augmenting Dataset", colour='cyan') as pbar:
         for subdir, dirs, files in os.walk(args.data_path):
             for file in files:
                 if file.endswith(".png") or file.endswith(".jpg") or file.endswith(".jpeg"):
