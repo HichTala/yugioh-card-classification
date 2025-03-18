@@ -42,7 +42,7 @@ def main(args):
         for i, images in enumerate(card["card_images"]):
             name = card["name"].replace(" ", "-") + "-" + str(i) + "-" + str(card["id"])
             if card["frameType"] in paths.keys():
-                path = os.path.join(paths[card["frameType"]], name)
+                path = os.path.join(output_path, name)
                 if not os.path.exists(path):
                     os.makedirs(path)
                     download_file(images["image_url_small"], os.path.join(path, str(images["id"])) + ".png")
