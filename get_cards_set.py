@@ -11,8 +11,8 @@ def parse_command_line():
     # data args
     parser.add_argument('--input_path', default='./cardinfo.json', type=str,
                         help="Path to training dataset's directory")
-    parser.add_argument('--input_path2', default='./cardinfo.json', type=str,
-                        help="Path to training dataset's directory")
+    # parser.add_argument('--input_path2', default='./cardinfo.json', type=str,
+    #                     help="Path to training dataset's directory")
     return parser.parse_args()
 
 
@@ -24,18 +24,18 @@ def download_file(url, destination):
 
 def process(card_info, output_dict, set_date):
     card_types = ['spell', 'trap', 'effect', 'normal', 'fusion', 'ritual']
-    for card in tqdm(card_info["data"], desc="Dowloading Cards", colour='cyan'):
+    for card in tqdm(card_info["data"], desc="Construction card sets equivalence", colour='cyan'):
         for i, images in enumerate(card["card_images"]):
             name = card["name"].replace(" ", "-") + "-" + str(i) + "-" + str(card["id"])
-            if card["frameType"] in card_types:
-                if name not in output_dict:
-                    try:
-                        rl_date = set_date[card["card_sets"][0]['set_code'].split("-")[0]]
-                    except KeyError:
-                        try:
-                            rl_date = set_date[card["card_sets"][1]['set_code'].split("-")[0]]
-                        except KeyError:
-                            rl_date = set_date[card["card_sets"][2]['set_code'].split("-")[0]]
+            # if card["frameType"] in card_types:
+            if name not in output_dict and "card_sets" in card.keys():
+                rl_date = None
+                for card_set in card["card_sets"]:
+                    if card_set['set_code'].split("-")[0] in set_date.keys():
+                        rl_date = set_date[card_set['set_code'].split("-")[0]]
+                        output_dict[name] = card_set['set_code'].replace("EN", "FR")
+                        break
+                if rl_date is not None:
                     for card_set in card["card_sets"]:
                         try:
                             if rl_date < set_date[card_set['set_code'].split("-")[0]]:
@@ -47,7 +47,7 @@ def process(card_info, output_dict, set_date):
 
 def main(args):
     input_path = args.input_path
-    input_path2 = args.input_path2
+    # input_path2 = args.input_path2
 
     output_dict = {}
     set_date = {}
@@ -55,8 +55,8 @@ def main(args):
     with open(input_path, "rb") as f:
         card_info = json.load(f)
 
-    with open(input_path2, "rb") as f:
-        card_info2 = json.load(f)
+    # with open(input_path2, "rb") as f:
+    #     card_info2 = json.load(f)
 
     with open("cardsets.json", "rb") as f:
         cardsets = json.load(f)
@@ -67,7 +67,7 @@ def main(args):
                 set_date[set["set_code"]] = set["tcg_date"]
 
     process(card_info, output_dict, set_date)
-    process(card_info2, output_dict, set_date)
+    # process(card_info2, output_dict, set_date)
 
     with open("card_sets.json", "w") as json_file:
         json.dump(output_dict, json_file)
