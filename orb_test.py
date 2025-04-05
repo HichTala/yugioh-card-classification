@@ -3,6 +3,7 @@ import os
 import pickle
 
 import cv2
+import imagehash
 import numpy as np
 from PIL import Image
 from matplotlib import pyplot as plt
@@ -45,11 +46,34 @@ def prototype_partition(model, limit, dataset_size):
     device = 'cuda' if is_available() else 'cpu'
 
     feature_map = {}
-    orb = cv2.ORB_create()
-
     target = cv2.imread("output.png")
     target = cv2.resize(target, (204, 204), interpolation=cv2.INTER_LINEAR)
-    target_kp, target_desc = orb.detectAndCompute(target, None)
+
+    img = Image.open("output/Divine-Arsenal-AA-ZEUS---Sky-Thunder-3119-90448279/90448279.jpg")
+    img = art_cropper(img)
+    img = np.array(img)
+    img = img[:, :, ::-1].copy()
+
+    phash_target = imagehash.phash(
+        Image.fromarray(np.uint8(255 * cv2.cvtColor(
+            target, cv2.COLOR_BGR2RGB))),
+        hash_size=32)
+
+    phash_im = imagehash.phash(
+        Image.fromarray(np.uint8(255 * cv2.cvtColor(
+            img, cv2.COLOR_BGR2RGB))),
+        hash_size=32)
+
+    breakpoint()
+
+    # orb = cv2.ORB_create()
+    #
+
+
+    #
+    # kp, desc = orb.detectAndCompute(img, None)
+    # target_kp, target_desc = orb.detectAndCompute(target, None)
+    # breakpoint()
 
     # img2 = cv2.drawKeypoints(target, target_kp, None, (255, 0, 0), 4)
     # cv2.imshow("", img2)
@@ -57,73 +81,80 @@ def prototype_partition(model, limit, dataset_size):
     #
     # breakpoint()
 
-    bf = cv2.BFMatcher()
+    # bf = cv2.BFMatcher()
     # FLANN_INDEX_KDTREE = 1
     # index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
     # search_params = dict(checks=50)
     #
     # flann = cv2.FlannBasedMatcher(index_params, search_params)
 
-    all_matches = []
+    # matches = bf.match(desc, target_desc)
+    # matches = sorted(matches, key=lambda x: x.distance)[:100]
+    #
+    # img3 = cv2.drawMatches(target, target_kp, img, kp, matches[:10], None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+    # plt.imshow(img3), plt.show()
+    breakpoint()
+
+    all_scores = []
 
     count = 0
     limit_count = 0
     with tqdm(total=dataset_size, desc="Saving pickles", colour='cyan') as pbar:
         for subdir, dirs, files in os.walk(args.data_path):
             for file in files:
-                if file.endswith(".png") or file.endswith(".jpg") or file.endswith(".jpeg"):
+                # if file.endswith(".png") or file.endswith(".jpg") or file.endswith(".jpeg"):
 
-                    count += 1
-                    pbar.update(1)
-                    abs_file_path = os.path.join(subdir, file)
+                count += 1
+                pbar.update(1)
+                abs_file_path = os.path.join(subdir, file)
 
-                    # img = cv2.imread(abs_file_path)
-                    img = Image.open(abs_file_path)
-                    img = art_cropper(img)
-                    img = np.array(img)
-                    img = img[:, :, ::-1].copy()
-                    kp, desc = orb.detectAndCompute(img, None)
+                # img = cv2.imread(abs_file_path)
+                img = Image.open(abs_file_path)
+                img = art_cropper(img)
+                img = np.array(img)
+                img = img[:, :, ::-1].copy()
+                kp, desc = orb.detectAndCompute(img, None)
 
-                    matches = bf.match(desc, target_desc)
+                matches = bf.match(desc, target_desc)
 
-                    # Sort them in the order of their distance.
-                    matches = sorted(matches, key=lambda x: x.distance)[:100]
+                # Sort them in the order of their distance.
+                # matches = sorted(matches, key=lambda x: x.distance)[:100]
 
-                    # matches = flann.knnMatch(desc, target_desc, k=2)
+                # matches = flann.knnMatch(desc, target_desc, k=2)
 
-                    # img2 = cv2.drawKeypoints(img, kp, None, (255, 0, 0), 4)
-                    # cv2.imshow("", img2)
-                    # cv2.waitKey(0)
-                    # breakpoint()
+                # img2 = cv2.drawKeypoints(img, kp, None, (255, 0, 0), 4)
+                # cv2.imshow("", img2)
+                # cv2.waitKey(0)
+                # breakpoint()
 
-                    # matches = bf.knnMatch(desc, target_desc, k=2)
-                    # breakpoint()
-                    # matches = sorted(matches, key=lambda x: x.distance)
+                # matches = bf.knnMatch(desc, target_desc, k=2)
+                # breakpoint()
+                # matches = sorted(matches, key=lambda x: x.distance)
 
-                    # breakpoint()
-                    all_matches.append((subdir, sum([match.distance for match in matches])))
+                # breakpoint()
+                all_scores.append((subdir, sum([match.distance for match in matches]) / len(matches)))
 
-                    # # img = Image.open(abs_file_path)
-                    # # inputs = final_data_transforms(img)
-                    # # inputs = inputs.to(device)
-                    # # inputs = inputs.unsqueeze(dim=0)
-                    # #
-                    # # outputs = model(inputs)
-                    #
-                    # dir_name = subdir.split('/')[-1]
-                    #
-                    # feature_map[dir_name] = (abs_file_path, outputs)
-                    #
-                    # if count % limit == 0:
-                    #     save_path = './prototypes/prototypes_partition/prototype_{}.pkl'.format(limit_count)
-                    #
-                    #     with open(save_path, "wb") as f:
-                    #         pickle.dump(feature_map, f)
-                    #     f.close()
-                    #
-                    #     feature_map = {}
-                    #     limit_count += 1
-    print(sorted(all_matches, key=lambda x: x[1])[:10])
+                # # img = Image.open(abs_file_path)
+                # # inputs = final_data_transforms(img)
+                # # inputs = inputs.to(device)
+                # # inputs = inputs.unsqueeze(dim=0)
+                # #
+                # # outputs = model(inputs)
+                #
+                # dir_name = subdir.split('/')[-1]
+                #
+                # feature_map[dir_name] = (abs_file_path, outputs)
+                #
+                # if count % limit == 0:
+                #     save_path = './prototypes/prototypes_partition/prototype_{}.pkl'.format(limit_count)
+                #
+                #     with open(save_path, "wb") as f:
+                #         pickle.dump(feature_map, f)
+                #     f.close()
+                #
+                #     feature_map = {}
+                #     limit_count += 1
+    print(sorted(all_scores, key=lambda x: x[1])[:10])
     breakpoint()
 
     save_path = './prototypes/prototypes_partition/prototype_{}.pkl'.format(limit_count + 1)

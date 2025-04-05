@@ -10,7 +10,7 @@ from seleniumbase import SB
 from tqdm import tqdm
 
 def main():
-    input_path = "./card_sets.json"
+    input_path = "./card_sets_real.json"
 
     with open("cm_card_info.json", "rb") as f:
         output_dict = json.load(f)
@@ -25,7 +25,8 @@ def main():
             try:
                 search_string = name[:-11].replace('"', '').replace("'", "")
                 sb.open(f"https://www.cardmarket.com/en/YuGiOh/Products/Search?searchString={search_string}")
-                sb.wait_for_element("select", timeout=10)
+                # sb.wait_for_element("select", timeout=10)
+                time.sleep(3)
                 page = sb.get_page_source()
                 soup = bs4.BeautifulSoup(page, features="lxml")
                 img_html_tags = soup.find('div', {"class": "table-body"}).find_all('span', {"class": "icon"})

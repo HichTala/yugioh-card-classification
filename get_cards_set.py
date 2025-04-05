@@ -28,21 +28,29 @@ def process(card_info, output_dict, set_date):
         for i, images in enumerate(card["card_images"]):
             name = card["name"].replace(" ", "-") + "-" + str(i) + "-" + str(card["id"])
             # if card["frameType"] in card_types:
-            if name not in output_dict and "card_sets" in card.keys():
-                rl_date = None
+            if "card_sets" in card.keys() and card["frameType"] not in ["skill", "token"]:
                 for card_set in card["card_sets"]:
-                    if card_set['set_code'].split("-")[0] in set_date.keys():
-                        rl_date = set_date[card_set['set_code'].split("-")[0]]
-                        output_dict[name] = card_set['set_code'].replace("EN", "FR")
-                        break
-                if rl_date is not None:
-                    for card_set in card["card_sets"]:
-                        try:
-                            if rl_date < set_date[card_set['set_code'].split("-")[0]]:
-                                rl_date = set_date[card_set['set_code'].split("-")[0]]
-                                output_dict[name] = card_set['set_code'].replace("EN", "FR")
-                        except KeyError:
-                            pass
+                    try:
+                        if name not in output_dict:
+                            output_dict[name] = [card_set['set_code'].replace("EN", "FR")]
+                        else:
+                            output_dict[name].append(card_set['set_code'].replace("EN", "FR"))
+                    except KeyError:
+                        pass
+                # rl_date = None
+                #
+                #     if card_set['set_code'].split("-")[0] in set_date.keys():
+                #         rl_date = set_date[card_set['set_code'].split("-")[0]]
+                #
+                #         break
+                # if rl_date is not None:
+                #     for card_set in card["card_sets"]:
+                #         try:
+                #             if rl_date < set_date[card_set['set_code'].split("-")[0]]:
+                #                 rl_date = set_date[card_set['set_code'].split("-")[0]]
+                #                 output_dict[name] = card_set['set_code'].replace("EN", "FR")
+                #         except KeyError:
+                #             pass
 
 
 def main(args):
@@ -69,7 +77,7 @@ def main(args):
     process(card_info, output_dict, set_date)
     # process(card_info2, output_dict, set_date)
 
-    with open("card_sets.json", "w") as json_file:
+    with open("card_sets_augmented.json", "w") as json_file:
         json.dump(output_dict, json_file)
 
 

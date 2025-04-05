@@ -12,14 +12,14 @@ def parse_command_line():
     parser = argparse.ArgumentParser('Yu-Gi-Oh! Dataset splitter testing parser', add_help=True)
 
     # data args
-    parser.add_argument('--data_path', default='./cardDatabaseFull/', type=str,
+    parser.add_argument('--data_path', default='./data/', type=str,
                         help="Path to training dataset's directory")
-    parser.add_argument('--dataset_size', default=10856, type=int,
+    parser.add_argument('--dataset_size', default=13597, type=int,
                         help="Number of cards in total in the dataset (default: 10856)")
 
     # iterations
 
-    parser.add_argument('--iter', default=100, type=int,
+    parser.add_argument('--iter', default=10, type=int,
                         help="Number of augmented images (default: 100)")
 
     return parser.parse_args()
@@ -41,12 +41,12 @@ def main(args):
                     new_img = image_transforms_no_tensor(img)
                     new_img.save(abs_file_path)
 
-                    for k in range(args.iter):
-                        split = file.split('.')
-                        new_file = split[0] + f"_{k}." + split[1]
-
-                        new_img = train_data_transforms(img)
-                        new_img.save(os.path.join(subdir, new_file))
+                    # for k in range(args.iter):
+                    #     split = file.split('.')
+                    #     new_file = split[0] + f"_{k}." + split[1]
+                    #
+                    #     new_img = train_data_transforms(img)
+                    #     new_img.save(os.path.join(subdir, new_file))
 
 
 if __name__ == '__main__':

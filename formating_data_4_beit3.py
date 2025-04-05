@@ -1,6 +1,6 @@
 import os
 
-from datasets import ImageNetDataset
+from datasets_loca import ImageNetDataset
 
 data_path = os.path.join("./data", "club_yugioh_dataset")
 card_types = ['spell', 'trap', 'effect', 'normal', 'fusion', 'ritual']
