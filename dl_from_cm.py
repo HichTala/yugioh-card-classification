@@ -8,7 +8,7 @@ from tqdm import tqdm
 class CMDownloader:
 
     def __init__(self):
-        input_path = "./cm_card_info.json"
+        input_path = "cm_card_info.json"
         self.output_path = "./datasets/cardmarket/"
 
         with open(input_path, "rb") as f:

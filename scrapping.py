@@ -10,7 +10,7 @@ from seleniumbase import SB
 from tqdm import tqdm
 
 def main():
-    input_path = "./card_sets_real.json"
+    input_path = "./card_sets_augmented.json"
 
     with open("cm_card_info.json", "rb") as f:
         output_dict = json.load(f)
@@ -23,24 +23,36 @@ def main():
     with SB(uc=True, headless=True) as sb:
         for name in tqdm(names, desc="Scrapping cm", colour='cyan'):
             try:
-                search_string = name[:-11].replace('"', '').replace("'", "")
-                sb.open(f"https://www.cardmarket.com/en/YuGiOh/Products/Search?searchString={search_string}")
+                search_string = "-".join(name.split("-")[:-2])
+                search_string = search_string.replace('"', '').replace("'", "")
+                search_string = search_string.replace('---', '-').replace("-=-", "-")
+                search_string = search_string.replace(',', '').replace(".", "")
+                search_string = search_string.replace('!', '').replace('?', '')
+                search_string = search_string.replace('%', '').replace("#", "")
+                sb.open(f"https://www.cardmarket.com/en/YuGiOh/Cards/{search_string}/Versions")
                 # sb.wait_for_element("select", timeout=10)
                 time.sleep(3)
+                if sb.is_element_visible('button[class="btn btn-outline-primary"]'):
+                    sb.click('button[class="btn btn-outline-primary"]')
+                    time.sleep(3)
+
+                    scroll_pause = 1
+                    scroll_step = 1000
+                    total_height = sb.driver.execute_script("return document.body.scrollHeight")
+                    current_position = 0
+                    while current_position < total_height:
+                        sb.driver.execute_script(f"window.scrollTo(0, {current_position});")
+                        time.sleep(scroll_pause)
+                        current_position += scroll_step
+                        total_height = sb.driver.execute_script("return document.body.scrollHeight")
+                    sb.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                    time.sleep(2)
+
                 page = sb.get_page_source()
                 soup = bs4.BeautifulSoup(page, features="lxml")
-                img_html_tags = soup.find('div', {"class": "table-body"}).find_all('span', {"class": "icon"})
-                for i, img_html_tag in enumerate(img_html_tags):
-                    img_soup = bs4.BeautifulSoup(img_html_tag.attrs['data-bs-original-title'], features="lxml")
-                    if img_soup.find('img') is None:
-                        url = soup.find_all('div', {"class": "slide"})[1].find('img').attrs['src']
-                        if url.split('/')[-1] != 'cardImageNotAvailable.png':
-                            if name not in output_dict:
-                                output_dict[name] = [url]
-                            else:
-                                output_dict[name].append(url)
-                        break
-                    url = img_soup.find('img').attrs['src']
+                img_html_tags = soup.find_all('div', {"class": "image card-image is-yugioh is-sharp"})
+                for i, tag in enumerate(img_html_tags):
+                    url = tag.find('img').attrs['src']
                     if url.split('/')[-1] != 'cardImageNotAvailable.png':
                         if name not in output_dict:
                             output_dict[name] = [url]
