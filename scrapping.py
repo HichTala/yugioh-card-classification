@@ -59,6 +59,8 @@ def main():
                         else:
                             output_dict[name].append(url)
                 time.sleep(3)
+            except KeyboardInterrupt:
+                break
             except Exception as e:
                 print(e)
                 print(name)
@@ -66,6 +68,7 @@ def main():
                     json.dump(output_dict, json_file)
                 continue
 
+    print("Saving data...")
     with open("cm_card_info.json", "w") as json_file:
         json.dump(output_dict, json_file)
 
