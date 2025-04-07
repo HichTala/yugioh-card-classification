@@ -9,27 +9,47 @@ import requests
 from seleniumbase import SB
 from tqdm import tqdm
 
+def format_search(search_string):
+    search_string = search_string.replace('"', '').replace("'", "")
+    search_string = search_string.replace('---', '-').replace("-=-", "-")
+    search_string = search_string.replace(',', '').replace(".", "")
+    search_string = search_string.replace('!', '').replace('?', '')
+    search_string = search_string.replace('%', '').replace("#", "")
+    search_string = search_string.replace('@', '').replace("/", "")
+    search_string = search_string.replace('★', '').replace("☆", "")
+    search_string = search_string.replace('&-', '').replace(':', '')
+    search_string = search_string.replace('(', '').replace(')', '')
+
+    return search_string
+
 def main():
-    input_path = "./card_sets4.json"
-    output_path = "cm_card_info4.json"
+    input_path = "./card_sets_augmented.json"
+    output_path = "cm_card_info_new.json"
+    wrong_format_path = "wrong_format.json"
+    right_format_path = "right_format.json"
 
     with open(output_path, "rb") as f:
         output_dict = json.load(f)
 
+    with open(wrong_format_path, "rb") as f:
+        wrong_format_dict = json.load(f)
+
+    with open(right_format_path, "rb") as f:
+        right_format_dict = json.load(f)
+
     with open(input_path, "rb") as f:
         card_sets = json.load(f)
 
-    names = [name for name in card_sets.keys() if name not in output_dict.keys()]
+    names = [name for name in card_sets.keys() if name not in output_dict.keys() and name]
+    print(names)
 
     with SB(uc=True, headless=True) as sb:
         for name in tqdm(names, desc="Scrapping cm", colour='cyan'):
             try:
                 search_string = "-".join(name.split("-")[:-2])
-                search_string = search_string.replace('"', '').replace("'", "")
-                search_string = search_string.replace('---', '-').replace("-=-", "-")
-                search_string = search_string.replace(',', '').replace(".", "")
-                search_string = search_string.replace('!', '').replace('?', '')
-                search_string = search_string.replace('%', '').replace("#", "")
+                if name in right_format_dict:
+                    search_string = right_format_dict[name]
+                search_string = format_search(search_string)
                 sb.open(f"https://www.cardmarket.com/en/YuGiOh/Cards/{search_string}/Versions")
                 # sb.wait_for_element("select", timeout=10)
                 time.sleep(3)
@@ -72,6 +92,8 @@ def main():
     print("Saving data...")
     with open(output_path, "w") as json_file:
         json.dump(output_dict, json_file)
+    with open(wrong_format_path, "w") as json_file:
+        json.dump(wrong_format_dict, json_file)
 
 
 if __name__ == '__main__':

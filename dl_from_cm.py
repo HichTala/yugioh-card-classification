@@ -8,7 +8,7 @@ from tqdm import tqdm
 class CMDownloader:
 
     def __init__(self):
-        input_path = "cm_card_info.json"
+        input_path = "cm_card_info_new.json"
         self.output_path = "./datasets/cardmarket/"
 
         with open(input_path, "rb") as f:
@@ -36,13 +36,16 @@ class CMDownloader:
             path = os.path.join(self.output_path, name.replace('/', ''))
             if not os.path.exists(path):
                 os.makedirs(path)
+            else:
+                if len(os.listdir(path)) == len(cm_url_list):
+                    continue
             for url in cm_url_list:
                 self.cm_url = url
                 card_set = url.split('/')[-3]
                 try:
                     self.download_file(url,
                                        os.path.join(path,
-                                                    f"{card_set}-{name.replace('/', '').split('-')[-1]}.{url.split('.')[-1]}"))
+                                                    f"{card_set}-{url.split('/')[-2]}.{url.split('.')[-1]}"))
                 except requests.exceptions.RequestException as e:
                     print(f"Error downloading {url}: {e}")
 
