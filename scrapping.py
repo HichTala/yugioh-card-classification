@@ -10,9 +10,10 @@ from seleniumbase import SB
 from tqdm import tqdm
 
 def main():
-    input_path = "./card_sets_augmented.json"
+    input_path = "./card_sets4.json"
+    output_path = "cm_card_info4.json"
 
-    with open("cm_card_info.json", "rb") as f:
+    with open(output_path, "rb") as f:
         output_dict = json.load(f)
 
     with open(input_path, "rb") as f:
@@ -64,12 +65,12 @@ def main():
             except Exception as e:
                 print(e)
                 print(name)
-                with open("cm_card_info.json", "w") as json_file:
+                with open(output_path, "w") as json_file:
                     json.dump(output_dict, json_file)
                 continue
 
     print("Saving data...")
-    with open("cm_card_info.json", "w") as json_file:
+    with open(output_path, "w") as json_file:
         json.dump(output_dict, json_file)
 
 
