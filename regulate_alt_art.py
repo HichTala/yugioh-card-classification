@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 
 def regulate_dir(subdir, dir):
-    target_path = "./datasets/Zouloux/"
+    target_path = "./datasets/cardmarket/"
 
     list_alt_dir = []
     hash_list = []

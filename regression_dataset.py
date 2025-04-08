@@ -1,3 +1,5 @@
+from tqdm import tqdm
+
 from datasets import load_dataset
 import cv2
 import numpy as np
@@ -78,52 +80,53 @@ def alphaMerge(small_foreground, background, top, left):
 
 
 def main():
-    data = load_dataset("benjamin-paine/imagenet-1k-256x256")
-    shuffled_data = data['train'].shuffle()
+    # data = load_dataset("benjamin-paine/imagenet-1k-256x256")
+    # shuffled_data = data['train'].shuffle()
 
-    with open("card_sets_real.json", "r") as f:
-        card_sets = json.load(f)
+    with tqdm(total=7000, desc="Generating Dataset", colour='cyan') as pbar:
+        # for i, single_data in enumerate(shuffled_data):
+        for single_data in os.listdir("datasets/playmate"):
+            for i in range(1000):
+                pbar.update(1)
 
-    for i, single_data in enumerate(shuffled_data):
-        if i == 10:
-            break
-        background = single_data["image"].convert('RGB')
-        background = np.array(background)[:, :, ::-1].copy()
-        background = cv2.resize(background, (640, 640), interpolation=cv2.INTER_LINEAR)
+                background = Image.open(os.path.join("datasets/playmate", single_data)).convert('RGB')
+                # background = single_data["image"].convert('RGB')
+                background = np.array(background)[:, :, ::-1].copy()
+                background = cv2.resize(background, (640, 640), interpolation=cv2.INTER_LINEAR)
 
-        nb_image = random.randint(1, 5)
-        coords = None
-        out_pt = None
+                nb_image = random.randint(1, 5)
+                # coords = None
+                # out_pt = None
 
-        f = open(f"datasets/yolo/train/labels/{i}.txt", "a+")
-        for _ in range(nb_image):
-            random_card = random.choice(list(card_sets.keys()))
-            path = os.path.join("datasets/Zouloux", random_card)
-            try:
-                path = os.path.join(path, random.choice(os.listdir(path)))
-            except IndexError as e:
-                breakpoint()
+                f = open(f"datasets/yolo/val/labels/{i}.txt", "a+")
+                for _ in range(nb_image):
+                    random_card = random.choice(os.listdir("datasets/ddraw"))
+                    path = os.path.join("datasets/ddraw", random_card)
+                    try:
+                        path = os.path.join(path, random.choice(os.listdir(path)))
+                    except IndexError as e:
+                        breakpoint()
 
-            image = Image.open(path).convert('RGB')
-            image = np.array(image)[:, :, ::-1].copy()
+                    image = Image.open(path).convert('RGB')
+                    image = np.array(image)[:, :, ::-1].copy()
 
-            width = random.randint(30, 90)
-            height = int(width * image.shape[0] / image.shape[1])
-            image = cv2.resize(image, (width, height), interpolation=cv2.INTER_LINEAR)
+                    width = random.randint(30, 90)
+                    height = int(width * image.shape[0] / image.shape[1])
+                    image = cv2.resize(image, (width, height), interpolation=cv2.INTER_LINEAR)
 
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2BGRA)
-            transform, out_pt = get_transform(image)
-            new_w = int(max(out_pt[:, 0]) - min(out_pt[:, 0]))
-            new_h = int(max(out_pt[:, 1]) - min(out_pt[:, 1]))
-            image = cv2.warpPerspective(image, transform, (new_w, new_h), flags=cv2.INTER_CUBIC,
-                                        borderMode=cv2.BORDER_CONSTANT, borderValue=[255, 255, 255, 0])
+                    image = cv2.cvtColor(image, cv2.COLOR_BGR2BGRA)
+                    transform, out_pt = get_transform(image)
+                    new_w = int(max(out_pt[:, 0]) - min(out_pt[:, 0]))
+                    new_h = int(max(out_pt[:, 1]) - min(out_pt[:, 1]))
+                    image = cv2.warpPerspective(image, transform, (new_w, new_h), flags=cv2.INTER_CUBIC,
+                                                borderMode=cv2.BORDER_CONSTANT, borderValue=[255, 255, 255, 0])
 
-            coords = random.randint(0, 640 - image.shape[0]), random.randint(0, 640 - image.shape[1])
-            background = alphaMerge(image, background, coords[0], coords[1])
-            f.write(
-                f"0 {(coords[1] + out_pt[0, 0]) / 640} {(coords[0] + out_pt[0, 1]) / 640} {(coords[1] + out_pt[1, 0]) / 640} {(coords[0] + out_pt[1, 1]) / 640} {(coords[1] + out_pt[2, 0]) / 640} {(coords[0] + out_pt[2, 1]) / 640} {(coords[1] + out_pt[3, 0]) / 640} {(coords[0] + out_pt[3, 1]) / 640}\n")
-        f.close()
-        cv2.imwrite(f"./datasets/yolo/train/image/{i}.png", background)
+                    coords = random.randint(0, 640 - image.shape[0]), random.randint(0, 640 - image.shape[1])
+                    background = alphaMerge(image, background, coords[0], coords[1])
+                    f.write(
+                        f"0 {(coords[1] + out_pt[0, 0]) / 640} {(coords[0] + out_pt[0, 1]) / 640} {(coords[1] + out_pt[1, 0]) / 640} {(coords[0] + out_pt[1, 1]) / 640} {(coords[1] + out_pt[2, 0]) / 640} {(coords[0] + out_pt[2, 1]) / 640} {(coords[1] + out_pt[3, 0]) / 640} {(coords[0] + out_pt[3, 1]) / 640}\n")
+                f.close()
+                cv2.imwrite(f"./datasets/yolo/val/images/{i}.png", background)
 
 
 if __name__ == "__main__":
