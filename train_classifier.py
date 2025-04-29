@@ -12,6 +12,7 @@ from datasets import load_dataset
 def compute_metrics(eval_pred):
     accuracy = evaluate.load("accuracy")
     predictions, labels = eval_pred
+    predictions = predictions[3]
     predictions = np.argmax(predictions, axis=1)
     return accuracy.compute(predictions=predictions, references=labels)
 
@@ -71,7 +72,7 @@ def main():
         # per_device_train_batch_size=8,
         # per_device_eval_batch_size=8,
         gradient_accumulation_steps=4,
-        num_train_epochs=1,
+        num_train_epochs=30,
         warmup_ratio=0.1,
         load_best_model_at_end=True,
         metric_for_best_model="accuracy",
