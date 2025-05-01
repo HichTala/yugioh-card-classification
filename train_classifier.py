@@ -15,7 +15,6 @@ from datasets import load_dataset
 def compute_metrics(eval_pred):
     accuracy = evaluate.load("accuracy")
     predictions, labels = eval_pred
-    predictions = predictions[3]
     predictions = np.argmax(predictions, axis=1)
     return accuracy.compute(predictions=predictions, references=labels)
 
@@ -27,7 +26,7 @@ def transforms(examples, _transforms):
 
 
 def main():
-    dataset_draw = load_dataset("datasets/ddraw", split="train[1000:]")
+    dataset_draw = load_dataset("datasets/ddraw", split="train[:100]")
     dataset_draw = dataset_draw.train_test_split(test_size=0.2)
 
     labels = dataset_draw["train"].features["label"].names
@@ -40,7 +39,11 @@ def main():
     image_processor = AutoImageProcessor.from_pretrained(checkpoint)
 
     normalize = Normalize(mean=image_processor.image_mean, std=image_processor.image_std)
-    size = (120, 89)
+    size = (
+        image_processor.size["shortest_edge"]
+        if "shortest_edge" in image_processor.size
+        else (image_processor.size["height"], image_processor.size["width"])
+    )
     _transforms = Compose([RandomResizedCrop(size), ToTensor(), normalize])
 
     model = AutoModelForImageClassification.from_pretrained(
