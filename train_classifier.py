@@ -26,7 +26,7 @@ def transforms(examples, _transforms):
 
 
 def main():
-    dataset_draw = load_dataset("datasets/ddraw", split="train[:100]")
+    dataset_draw = load_dataset("datasets/ddraw", split="train")
     dataset_draw = dataset_draw.train_test_split(test_size=0.2)
 
     labels = dataset_draw["train"].features["label"].names
