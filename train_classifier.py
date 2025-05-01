@@ -1,10 +1,13 @@
 import evaluate
 import numpy as np
-from timm.data import create_transform
-from torch import nn
 from torchvision.transforms import Normalize, Compose, RandomResizedCrop, ToTensor
-from transformers import AutoImageProcessor, AutoModelForImageClassification, DefaultDataCollator, TrainingArguments, \
-    Trainer, CLIPImageProcessor
+from transformers import (
+    AutoModelForImageClassification,
+    DefaultDataCollator,
+    TrainingArguments,
+    Trainer,
+    AutoImageProcessor
+)
 
 from datasets import load_dataset
 
@@ -24,7 +27,7 @@ def transforms(examples, _transforms):
 
 
 def main():
-    dataset_draw = load_dataset("datasets/ddraw", split="train[100:]")
+    dataset_draw = load_dataset("datasets/ddraw", split="train[1000:]")
     dataset_draw = dataset_draw.train_test_split(test_size=0.2)
 
     labels = dataset_draw["train"].features["label"].names
@@ -34,13 +37,11 @@ def main():
         id2label[i] = label
 
     checkpoint = "google/vit-base-patch16-224-in21k"
-    image_processor = CLIPImageProcessor.from_pretrained(checkpoint)
+    image_processor = AutoImageProcessor.from_pretrained(checkpoint)
 
     normalize = Normalize(mean=image_processor.image_mean, std=image_processor.image_std)
     size = (120, 89)
     _transforms = Compose([RandomResizedCrop(size), ToTensor(), normalize])
-
-
 
     model = AutoModelForImageClassification.from_pretrained(
         checkpoint,
@@ -50,7 +51,6 @@ def main():
         ignore_mismatched_sizes=True,
         trust_remote_code=True
     )
-    nn.init.constant_(model.model.head.bias, 0)
 
     dataset_draw = dataset_draw.with_transform(
         lambda x: transforms(
