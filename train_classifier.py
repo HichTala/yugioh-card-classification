@@ -24,7 +24,7 @@ def transforms(examples, _transforms):
 
 
 def main():
-    dataset_draw = load_dataset("datasets/ddraw", split="train")
+    dataset_draw = load_dataset("datasets/ddraw", split="train[100:]")
     dataset_draw = dataset_draw.train_test_split(test_size=0.2)
 
     labels = dataset_draw["train"].features["label"].names
@@ -33,7 +33,7 @@ def main():
         label2id[label] = str(i)
         id2label[i] = label
 
-    checkpoint = "OpenGVLab/internimage_l_22k_384"
+    checkpoint = "google/vit-base-patch16-224-in21k"
     image_processor = CLIPImageProcessor.from_pretrained(checkpoint)
 
     normalize = Normalize(mean=image_processor.image_mean, std=image_processor.image_std)
@@ -44,7 +44,7 @@ def main():
 
     model = AutoModelForImageClassification.from_pretrained(
         checkpoint,
-        num_classes=len(labels),
+        num_labels=len(labels),
         id2label=id2label,
         label2id=label2id,
         ignore_mismatched_sizes=True,
