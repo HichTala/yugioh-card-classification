@@ -98,7 +98,7 @@ def main():
                 # coords = None
                 # out_pt = None
 
-                f = open(f"datasets/yolo/val/labels/{i}.txt", "a+")
+                f = open(f"datasets/yolo/val/labels/{single_data}_{i}.txt", "a+")
                 for _ in range(nb_image):
                     random_card = random.choice(os.listdir("datasets/ddraw"))
                     path = os.path.join("datasets/ddraw", random_card)
@@ -126,7 +126,7 @@ def main():
                     f.write(
                         f"0 {(coords[1] + out_pt[0, 0]) / 640} {(coords[0] + out_pt[0, 1]) / 640} {(coords[1] + out_pt[1, 0]) / 640} {(coords[0] + out_pt[1, 1]) / 640} {(coords[1] + out_pt[2, 0]) / 640} {(coords[0] + out_pt[2, 1]) / 640} {(coords[1] + out_pt[3, 0]) / 640} {(coords[0] + out_pt[3, 1]) / 640}\n")
                 f.close()
-                cv2.imwrite(f"./datasets/yolo/val/images/{i}.png", background)
+                cv2.imwrite(f"./datasets/yolo/val/images/{single_data}_{i}.png", background)
 
 
 if __name__ == "__main__":

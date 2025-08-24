@@ -10,10 +10,9 @@ import cv2
 
 
 def main():
-    dataset_size = 13160
-    data_path = "datasets/ddraw"
+    dataset_size = 13233
+    data_path = "/home/hicham/Documents/draw2-training/datasets/ddraw"
     nb_image = 0
-
     with tqdm(total=dataset_size, desc="Augmenting Dataset", colour='cyan') as pbar:
         for subdir, dirs, files in os.walk(data_path):
             pbar.update(1)
@@ -22,7 +21,9 @@ def main():
                 abs_file_path = os.path.join(subdir, file)
                 img = cv2.imread(abs_file_path)
                 img = cv2.resize(img, (89, 120), interpolation=cv2.INTER_LINEAR)
-                cv2.imwrite(abs_file_path, img)
+                if img.shape != (120, 89, 3):
+                    print(img.shape, abs_file_path)
+                # cv2.imwrite(abs_file_path, img)
     print(nb_image, 'images')
                 # try:
                 #     img = Image.open(abs_file_path)

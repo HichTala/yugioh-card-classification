@@ -24,8 +24,8 @@ def format_search(search_string):
 
 def main():
     input_path = "./card_sets_augmented.json"
-    output_path = "cm_card_info_new.json"
-    wrong_format_path = "wrong_format.json"
+    output_path = "cm_card_info_new_test.json"
+    wrong_format_path = "wrong_format.bckp.json"
     right_format_path = "right_format.json"
 
     with open(output_path, "rb") as f:
@@ -51,6 +51,7 @@ def main():
                     search_string = right_format_dict[name]
                 search_string = format_search(search_string)
                 sb.open(f"https://www.cardmarket.com/en/YuGiOh/Cards/{search_string}/Versions")
+                print(f"https://www.cardmarket.com/en/YuGiOh/Cards/{search_string}/Versions")
                 # sb.wait_for_element("select", timeout=10)
                 time.sleep(3)
                 if sb.is_element_visible('button[class="btn btn-outline-primary"]'):
@@ -70,10 +71,13 @@ def main():
                     time.sleep(2)
 
                 page = sb.get_page_source()
+                print(page)
                 soup = bs4.BeautifulSoup(page, features="lxml")
                 img_html_tags = soup.find_all('div', {"class": "image card-image is-yugioh is-sharp"})
+                print(img_html_tags)
                 for i, tag in enumerate(img_html_tags):
                     url = tag.find('img').attrs['src']
+                    print(url)
                     if url.split('/')[-1] != 'cardImageNotAvailable.png':
                         if name not in output_dict:
                             output_dict[name] = [url]
